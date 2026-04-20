@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter&family=Kantumruy+Pro&display=swap');
+@import "tailwindcss";
+
+body {
+  font-family: 'Inter', 'Kantumruy Pro', sans-serif;
+  line-height: 1.7;
+}
+/* hide scrollbar but keep scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
