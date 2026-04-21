@@ -4,7 +4,6 @@ import Navbar from "../components/layout/Navbar";
 
 import Dashboard from "../pages/Admins/Dashborad";
 import ChartProducts from "../pages/Admins/Iventory/ChartProducts";
-import IventoryPage from "../pages/Admins/Iventory/IventoryPage";
 import AddMedicine from "../pages/Admins/Iventory/AddMedicine";
 import AddType from "../pages/Admins/Iventory/AddType";
 import StaffDashboard from "../pages/Admins/staff/StaffDashboard";
@@ -17,6 +16,7 @@ import SupplierDetail from "../pages/Admins/Supplier/SupplierDetail";
 import Customer from "../pages/Admins/Customer";
 import Expence from "../pages/Admins/Expence";
 import ReportAdmin from "../pages/Admins/ReportAdmin";
+import ProductList from "../pages/Admins/Iventory/ProductList";
 
 const AdminRoute = () => {
   return (
@@ -30,7 +30,7 @@ const AdminRoute = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="inventory" element={<ChartProducts />} />
-            <Route path="inventory/list" element={<IventoryPage />} />
+            <Route path="inventory/list" element={<ProductList />} />
             <Route path="inventory/add" element={<AddMedicine />} />
             <Route path="inventory/addType" element={<AddType />} />
             <Route path="staff" element={<StaffDashboard />} />
