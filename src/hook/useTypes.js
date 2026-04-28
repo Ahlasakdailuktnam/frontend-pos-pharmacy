@@ -44,7 +44,7 @@ const useTypes = () => {
       setCategories(catRes?.data?.data || []);
       setSubCategories(subRes?.data?.data || []);
     } catch (error) {
-      console.log("Fetch Types Error:", error);
+  console.log(error.response?.data);
     } finally {
       setLoading(false);
     }

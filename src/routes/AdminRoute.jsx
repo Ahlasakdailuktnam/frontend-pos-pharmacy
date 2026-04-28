@@ -17,6 +17,8 @@ import Customer from "../pages/Admins/Customer";
 import Expence from "../pages/Admins/Expence";
 import ReportAdmin from "../pages/Admins/ReportAdmin";
 import ProductList from "../pages/Admins/Iventory/ProductList";
+import AddPurchaseItem from "../pages/Admins/Supplier/AddPurchaseItem";
+import ReceiptPage from "../pages/Admins/Supplier/ReceiptPage";
 
 const AdminRoute = () => {
   return (
@@ -39,7 +41,9 @@ const AdminRoute = () => {
             <Route path="staff/attendance" element={<Attendance />} />
             <Route path="supplier" element={<Supplier />} />
             <Route path="supplier/add" element={<AddSupplier />} />
+            <Route path="supplier/add-sup-invoice" element={<AddPurchaseItem />} />
             <Route path="supplier/list" element={<SupplierDetail />} />
+            <Route path="supplier/receipt" element={<ReceiptPage/>}/>
             <Route path="customer" element={<Customer />} />
             <Route path="expence" element={<Expence />} />
             <Route path="report" element={<ReportAdmin />} />

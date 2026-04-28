@@ -82,3 +82,21 @@ export const deleteSubCategory =
       `/api/subcategories/${id}`
     );
   };
+
+  /* =========================
+   UNITS
+========================= */
+
+export const getUnits = async () => {
+  return await api.get("/api/units");
+};
+
+export const addUnit = async (data) => {
+  return await api.post("/api/units", data);
+};
+export const getSuppliers = async () => {
+  return await api.get("/api/suppliers");
+};
+export const addSupplier = async (data) => {
+  return await api.post("/api/suppliers", data);
+};

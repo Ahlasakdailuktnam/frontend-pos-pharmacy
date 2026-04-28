@@ -1,19 +1,20 @@
 import { useState } from "react";
 import api from "../api/axios";
-import { defaultUnit } from "../constants/productUnits";
 
 const initialFormData = {
   name: "",
   nameEn: "",
+
   category: "",
   subCategory: "",
-  unit: defaultUnit,
+
+  unit_id: "",
 
   pricePerUnit: "",
-  pricePerBox: "",
-  boxSize: "",
+  pricePerPack: "",
+  packSize: "",
+
   cost: "",
-  wholesalePrice: "",
 
   stockUnit: "",
   stockBox: "",
@@ -21,8 +22,11 @@ const initialFormData = {
 
   expiry: "",
   prescription: false,
-  description: "",
+
+  supplier_id: "",
+  barcode: "",
   manufacturer: "",
+  description: "",
   location: "",
 
   image: null,
@@ -34,17 +38,17 @@ const useProductForm = () => {
 
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  // ===============================
-  // Handle Input
-  // ===============================
+  /* ===============================
+     HANDLE CHANGE
+  =============================== */
   const handleChange = async (e, fetchSubCategories) => {
     const { name, value, type, checked, files } = e.target;
 
-    // File Upload
+    // IMAGE
     if (type === "file") {
       const file = files?.[0];
-
       if (!file) return;
 
       setFormData((prev) => ({
@@ -59,21 +63,19 @@ const useProductForm = () => {
       };
 
       reader.readAsDataURL(file);
-
       return;
     }
 
-    // Checkbox
+    // CHECKBOX
     if (type === "checkbox") {
       setFormData((prev) => ({
         ...prev,
         [name]: checked,
       }));
-
       return;
     }
 
-    // Category Change
+    // CATEGORY
     if (name === "category") {
       setFormData((prev) => ({
         ...prev,
@@ -88,99 +90,151 @@ const useProductForm = () => {
       return;
     }
 
-    // Normal Input
+    // NORMAL INPUT
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  // ===============================
-  // Reset Form
-  // ===============================
+  /* ===============================
+     RESET FORM
+  =============================== */
   const resetForm = () => {
     setFormData(initialFormData);
     setPreviewImage(null);
+    setErrors({});
   };
 
-  // ===============================
-  // Submit Product
-  // ===============================
+  /* ===============================
+     SUBMIT
+  =============================== */
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    setSaving(true);
+    try {
+      setSaving(true);
+      setErrors({});
 
-    await api.get("/sanctum/csrf-cookie");
+      await api.get("/sanctum/csrf-cookie");
 
-    const sendData = new FormData();
+      const sendData = new FormData();
 
-    sendData.append("name", formData.name);
-    sendData.append("name_en", formData.nameEn);
+      // Basic Info
+      sendData.append("name", formData.name);
+      sendData.append("name_en", formData.nameEn);
 
-    sendData.append("category_id", formData.category);
-    sendData.append("sub_category_id", formData.subCategory || "");
+      sendData.append("category_id", formData.category);
+      sendData.append("sub_category_id", formData.subCategory || "");
 
-    sendData.append("unit", formData.unit);
+      sendData.append("unit_id", formData.unit_id || "");
 
-    sendData.append("price_per_unit", formData.pricePerUnit || 0);
-    sendData.append("price_per_box", formData.pricePerBox || 0);
-    sendData.append("box_size", formData.boxSize || 0);
+      // Pricing
+      sendData.append(
+        "price_per_unit",
+        formData.pricePerUnit || 0
+      );
 
-    sendData.append("cost", formData.cost || 0);
+      sendData.append(
+        "price_per_box",
+        formData.pricePerPack || 0
+      );
 
-    sendData.append("stock_box", formData.stockBox || 0);
+      sendData.append(
+        "box_size",
+        formData.packSize || 1
+      );
 
-    sendData.append("expiry_date", formData.expiry || "");
+      sendData.append("cost", formData.cost || 0);
 
-    sendData.append("manufacturer", formData.manufacturer);
-    sendData.append(
-      "prescription_required",
-      formData.prescription ? 1 : 0
-    );
+      // Stock
+      sendData.append(
+        "stock_unit",
+        formData.stockUnit || 0
+      );
 
-    sendData.append("description", formData.description);
-    sendData.append("location", formData.location);
+      sendData.append(
+        "stock_box",
+        formData.stockBox || 0
+      );
 
-    if (formData.image) {
-      sendData.append("image", formData.image);
+      sendData.append(
+        "min_stock",
+        formData.minStock || 0
+      );
+
+      // Extra
+      sendData.append(
+        "expiry_date",
+        formData.expiry || ""
+      );
+
+      sendData.append(
+        "prescription_required",
+        formData.prescription ? 1 : 0
+      );
+
+      sendData.append(
+        "supplier_id",
+        formData.supplier_id || ""
+      );
+
+      sendData.append(
+        "barcode",
+        formData.barcode || ""
+      );
+
+      sendData.append(
+        "manufacturer",
+        formData.manufacturer || ""
+      );
+
+      sendData.append(
+        "description",
+        formData.description || ""
+      );
+
+      sendData.append(
+        "location",
+        formData.location || ""
+      );
+
+      // Image
+      if (formData.image) {
+        sendData.append("image", formData.image);
+      }
+
+      await api.post("/api/products", sendData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setShowSuccess(true);
+
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+
+      resetForm();
+    } catch (error) {
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors);
+      }
+
+      console.log(error.response?.data || error);
+    } finally {
+      setSaving(false);
     }
-
-    await api.post("/api/products", sendData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    setShowSuccess(true);
-
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
-
-    resetForm();
-  } catch (error) {
-    console.log(error.response?.data || error);
-  } finally {
-    setSaving(false);
-  }
-};
-
-  const isTablet = formData.unit === "គ្រាប់";
+  };
 
   return {
     formData,
     setFormData,
-
     previewImage,
-    setPreviewImage,
-
     saving,
     showSuccess,
-
-    isTablet,
-
+    errors,
     handleChange,
     handleSubmit,
     resetForm,

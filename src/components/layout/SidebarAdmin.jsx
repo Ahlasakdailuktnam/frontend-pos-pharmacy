@@ -297,6 +297,18 @@ const Sidebar = () => {
                     បន្ថែមអ្នកនាំចូល
                   </div>
                 </Link>
+                <Link to="/admin/supplier/add-sup-invoice">
+                  <div
+                    className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
+                      location.pathname === "/admin/supplier/add-sup-invoice"
+                        ? "bg-blue-100 text-[#0D9488]"
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <MdAddChart />
+                    បន្ថែមវិក្ក័យបត្រទំនិញនាំចូល
+                  </div>
+                </Link>
               </div>
             )}
           </div>

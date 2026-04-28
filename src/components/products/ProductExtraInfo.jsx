@@ -1,13 +1,20 @@
 import React from "react";
+import { FaPills } from "react-icons/fa";
 
 const ProductExtraInfo = ({
   formData,
   handleChange,
   fetchSubCategories,
+  suppliers,
+  loadingSuppliers,
 }) => {
   return (
     <>
-      {/* Expiry / Manufacturer / Prescription / Location */}
+      <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-4">
+        <FaPills className="text-teal-600" />
+        ព័ត៌មានបន្ថែម
+      </h2>
+      {/* Extra Info */}
       <div className="pt-4 border-t border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Expiry */}
@@ -25,20 +32,31 @@ const ProductExtraInfo = ({
             />
           </div>
 
-          {/* Manufacturer */}
+          {/* Supplier */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              ក្រុមហ៊ុនផលិត
+              អ្នកផ្គត់ផ្គង់
             </label>
 
-            <input
-              type="text"
-              name="manufacturer"
-              value={formData.manufacturer}
+            <select
+              name="supplier_id"
+              value={formData.supplier_id}
               onChange={(e) => handleChange(e, fetchSubCategories)}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-              placeholder="ឈ្មោះក្រុមហ៊ុន"
-            />
+            >
+              <option value="">
+                {loadingSuppliers ? "កំពុងទាញទិន្នន័យ..." : "ជ្រើសរើស Supplier"}
+              </option>
+
+              {suppliers.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.company_name_kh ||
+                    item.company_name_en ||
+                    item.name ||
+                    "No Name"}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Prescription */}
@@ -70,6 +88,22 @@ const ProductExtraInfo = ({
               onChange={(e) => handleChange(e, fetchSubCategories)}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               placeholder="ឧ. ធ្នើរ A1, ទូរទឹកកក"
+            />
+          </div>
+
+          {/* Barcode */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Barcode
+            </label>
+
+            <input
+              type="text"
+              name="barcode"
+              value={formData.barcode}
+              onChange={(e) => handleChange(e, fetchSubCategories)}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              placeholder="ឧ. B0015843"
             />
           </div>
         </div>

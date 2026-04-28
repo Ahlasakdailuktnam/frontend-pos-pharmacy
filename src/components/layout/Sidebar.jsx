@@ -19,7 +19,6 @@ const Sidebar = () => {
     try {
       await logoutUser();
     } catch (error) {
-      console.log(error);
     } finally {
       setUser(null);
       navigate("/");

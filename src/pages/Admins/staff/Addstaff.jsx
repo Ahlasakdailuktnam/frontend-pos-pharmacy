@@ -181,7 +181,6 @@ const Addstaff = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateStep()) {
-      console.log("Form Data:", formData);
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);

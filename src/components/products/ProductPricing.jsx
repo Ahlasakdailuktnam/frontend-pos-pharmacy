@@ -1,22 +1,36 @@
 import React from "react";
-import { productUnits } from "../../constants/productUnits";
+import { FaBoxes } from "react-icons/fa";
 
 const ProductPricing = ({
   formData,
   handleChange,
   fetchSubCategories,
-  isTablet,
+  units = [],
 }) => {
-  const currentUnit =
-    productUnits.find((item) => item.value === formData.unit) ||
-    productUnits[0];
+  // FIND SELECTED UNIT
+  const selectedUnit = units.find(
+    (item) => item.id == formData.unit_id
+  );
 
-  const UnitIcon = currentUnit.icon;
+  const unitName =
+    selectedUnit?.name?.toLowerCase() || "";
+
+  // CHECK UNIT TYPE
+  const isTablet =
+    unitName.includes("tablets") ||
+    unitName.includes("pill") ||
+    unitName.includes("capsule") ||
+    unitName.includes("tab") ||
+    unitName.includes("គ្រាប់");
+
+  const isBox =
+    unitName.includes("box") ||
+    unitName.includes("ប្រអប់");
 
   return (
     <div className="pt-4 border-t border-gray-100">
       <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-4">
-        <UnitIcon className="text-teal-600" />
+        <FaBoxes className="text-teal-600" />
         តម្លៃ និងស្តុក
       </h2>
 
@@ -33,13 +47,15 @@ const ProductPricing = ({
               step="0.01"
               name="pricePerUnit"
               value={formData.pricePerUnit}
-              onChange={(e) => handleChange(e, fetchSubCategories)}
+              onChange={(e) =>
+                handleChange(e, fetchSubCategories)
+              }
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               placeholder="0.00"
             />
           </div>
 
-          {/* Box Size */}
+          {/* Tablets Per Box */}
           <div className="bg-blue-50 rounded-xl p-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               ចំនួនគ្រាប់ក្នុងប្រអប់
@@ -47,11 +63,13 @@ const ProductPricing = ({
 
             <input
               type="number"
-              name="boxSize"
-              value={formData.boxSize}
-              onChange={(e) => handleChange(e, fetchSubCategories)}
+              name="packSize"
+              value={formData.packSize}
+              onChange={(e) =>
+                handleChange(e, fetchSubCategories)
+              }
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-              placeholder="ឧ. 100 គ្រាប់"
+              placeholder="ឧ. 100"
             />
           </div>
 
@@ -64,9 +82,11 @@ const ProductPricing = ({
             <input
               type="number"
               step="0.01"
-              name="pricePerBox"
-              value={formData.pricePerBox}
-              onChange={(e) => handleChange(e, fetchSubCategories)}
+              name="pricePerPack"
+              value={formData.pricePerPack}
+              onChange={(e) =>
+                handleChange(e, fetchSubCategories)
+              }
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               placeholder="0.00"
             />
@@ -83,18 +103,21 @@ const ProductPricing = ({
               step="0.01"
               name="cost"
               value={formData.cost}
-              onChange={(e) => handleChange(e, fetchSubCategories)}
+              onChange={(e) =>
+                handleChange(e, fetchSubCategories)
+              }
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               placeholder="0.00"
             />
           </div>
         </div>
       ) : (
+        /* NORMAL UNIT */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Sell Price */}
           <div className="bg-teal-50 rounded-xl p-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              តម្លៃលក់ ($) <span className="text-red-500">*</span>
+              តម្លៃលក់ ($)
             </label>
 
             <input
@@ -102,29 +125,34 @@ const ProductPricing = ({
               step="0.01"
               name="pricePerUnit"
               value={formData.pricePerUnit}
-              onChange={(e) => handleChange(e, fetchSubCategories)}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-              placeholder="0.00"
-              required
-            />
-          </div>
-
-          {/* Wholesale */}
-          <div className="bg-green-50 rounded-xl p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              តម្លៃលក់ដុំ ($)
-            </label>
-
-            <input
-              type="number"
-              step="0.01"
-              name="wholesalePrice"
-              value={formData.wholesalePrice}
-              onChange={(e) => handleChange(e, fetchSubCategories)}
+              onChange={(e) =>
+                handleChange(e, fetchSubCategories)
+              }
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               placeholder="0.00"
             />
           </div>
+
+          {/* Price Per Box if box */}
+          {isBox && (
+            <div className="bg-green-50 rounded-xl p-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                តម្លៃក្នុងមួយប្រអប់ ($)
+              </label>
+
+              <input
+                type="number"
+                step="0.01"
+                name="pricePerPack"
+                value={formData.pricePerPack}
+                onChange={(e) =>
+                  handleChange(e, fetchSubCategories)
+                }
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                placeholder="0.00"
+              />
+            </div>
+          )}
 
           {/* Cost */}
           <div className="bg-purple-50 rounded-xl p-4">
@@ -137,7 +165,9 @@ const ProductPricing = ({
               step="0.01"
               name="cost"
               value={formData.cost}
-              onChange={(e) => handleChange(e, fetchSubCategories)}
+              onChange={(e) =>
+                handleChange(e, fetchSubCategories)
+              }
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               placeholder="0.00"
             />

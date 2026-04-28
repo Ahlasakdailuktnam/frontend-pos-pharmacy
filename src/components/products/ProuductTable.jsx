@@ -11,7 +11,7 @@ import {
 } from "react-icons/md";
 import { FaPills } from "react-icons/fa";
 
-const ProductTable = ({ products, onDelete }) => {
+const ProductTable = ({ products = [], onDelete }) => {
   const getStockStatus = (stock) => {
     const qty = Number(stock || 0);
 
@@ -45,7 +45,6 @@ const ProductTable = ({ products, onDelete }) => {
     return (
       product.image ||
       product.image_url ||
-      product.photo ||
       null
     );
   };
@@ -60,141 +59,146 @@ const ProductTable = ({ products, onDelete }) => {
         <table className="w-full">
           {/* Header */}
           <thead>
-            <tr className="text-left text-sm font-medium text-gray-500 border-b border-gray-100 bg-white">
+            <tr className="text-left text-sm font-medium text-gray-500 border-b border-gray-200 bg-white">
+              <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">ផលិតផល</th>
               <th className="px-4 py-3">ប្រភេទ</th>
               <th className="px-4 py-3">តម្លៃ</th>
               <th className="px-4 py-3">ស្តុក</th>
               <th className="px-4 py-3">ថ្ងៃផុតកំណត់</th>
               <th className="px-4 py-3">ស្ថានភាព</th>
-              <th className="px-4 py-3"></th>
+              <th className="px-4 py-3 text-center">Action</th>
             </tr>
           </thead>
 
           {/* Body */}
           <tbody className="divide-y divide-gray-50">
-            {products.map((product) => {
-              const stockQty =
-                product.stock_unit ||
-                product.stock ||
-                0;
+            {products.length > 0 ? (
+              products.map((product) => {
+                const stockQty =
+                  product.stock_unit ||
+                  product.stock_box ||
+                  0;
 
-              const stock = getStockStatus(stockQty);
+                const stock = getStockStatus(stockQty);
 
-              const image = getImage(product);
+                const image = getImage(product);
 
-              const category =
-                product.category?.name ||
-                product.category_name ||
-                product.category ||
-                "-";
+                const category =
+                  product.category?.name ||
+                  "-";
 
-              return (
-                <tr
-                  key={product.id}
-                  className="hover:bg-gray-50 transition-colors group"
-                >
-                  {/* Product */}
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {/* Image */}
-                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-teal-100 flex items-center justify-center shrink-0">
-                        {image ? (
-                          <img
-                            src={image}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display =
-                                "none";
-                            }}
-                          />
-                        ) : (
-                          <FaPills
-                            className="text-teal-600"
-                            size={14}
-                          />
-                        )}
+                const unit =
+                product.unit?.name ||
+                product.unit?.symbol ||
+                  "";
+
+                return (
+                  <tr
+                    key={product.id}
+                    className="hover:bg-gray-50 transition"
+                  >
+                    {/* Product Code */}
+                    <td className="px-4 py-3 font-semibold text-teal-600">
+                      {product.product_code || `P00${product.id}`}
+                    </td>
+
+                    {/* Product */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-teal-100 flex justify-center items-center shrink-0">
+                          {image ? (
+                            <img
+                              src={image}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FaPills
+                              className="text-teal-600"
+                              size={14}
+                            />
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="font-medium text-gray-800">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {product.name_en}
+                          </p>
+                        </div>
                       </div>
+                    </td>
 
-                      {/* Name */}
-                      <div>
-                        <span className="font-medium text-gray-800 group-hover:text-teal-600 transition-colors">
-                          {product.name}
-                        </span>
-
-                        <p className="text-xs text-gray-400">
-                          {product.name_en ||
-                            product.nameEn}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Category */}
-                  <td className="px-4 py-3">
-                    <span className="text-xs px-2 py-1 rounded-full bg-teal-50 text-teal-600">
-                      {category}
-                    </span>
-                  </td>
-
-                  {/* Price */}
-                  <td className="px-4 py-3 text-sm font-semibold text-teal-600">
-                    ${formatPrice(product.price_per_unit)}
-                  </td>
-
-                  {/* Stock */}
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-sm font-medium ${stock.color}`}
-                    >
-                      {stockQty} {product.unit}
-                    </span>
-                  </td>
-
-                  {/* Expiry */}
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {product.expiry_date || "-"}
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-4 py-3">
-                    <div
-                      className={`flex items-center gap-1 ${stock.bg} px-2 py-1 rounded-full w-fit`}
-                    >
-                      {stock.icon}
-
-                      <span
-                        className={`text-xs ${stock.color}`}
-                      >
-                        {stock.text}
+                    {/* Category */}
+                    <td className="px-4 py-3">
+                      <span className="text-xs px-2 py-1 rounded-full bg-teal-50 text-teal-600">
+                        {category}
                       </span>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Actions */}
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1">
-                      <Link
-                        to={`/edit-product/${product.id}`}
-                        className="p-1 text-gray-400 hover:text-teal-600 transition-colors"
-                      >
-                        <MdEdit size={16} />
-                      </Link>
+                    {/* Price */}
+                    <td className="px-4 py-3 font-semibold text-teal-600">
+                      ${formatPrice(product.price_per_unit)}
+                    </td>
 
-                      <button
-                        onClick={() =>
-                          onDelete(product)
-                        }
-                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                    {/* Stock */}
+                    <td className="px-4 py-3">
+                      <span className={stock.color}>
+                        {stockQty} {product.unit?.name || "ផលិតផល"}
+                      </span>
+                    </td>
+
+                    {/* Expiry */}
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {product.expiry_date || "-"}
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-4 py-3">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full w-fit ${stock.bg}`}
                       >
-                        <MdDelete size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                        {stock.icon}
+                        <span className={`text-xs ${stock.color}`}>
+                          {stock.text}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Action */}
+                    <td className="px-4 py-3">
+                      <div className="flex justify-center gap-2">
+                        <Link
+                          to={`/edit-product/${product.id}`}
+                          className="p-1 text-gray-400 hover:text-teal-600"
+                        >
+                          <MdEdit size={18} />
+                        </Link>
+
+                        <button
+                          onClick={() => onDelete(product)}
+                          className="p-1 text-gray-400 hover:text-red-600"
+                        >
+                          <MdDelete size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan="8"
+                  className="text-center py-8 text-gray-400"
+                >
+                  No Products Found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
