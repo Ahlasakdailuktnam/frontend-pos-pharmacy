@@ -107,6 +107,7 @@ export const addSupplier = async (data) => {
 
 
 
+
 //warehouse
 export const getWarehouses = async () => {
   const res = await api.get("/api/warehouses");
@@ -125,5 +126,15 @@ export const updateWarehouse = async (id, data) => {
 
 export const deleteWarehouse = async (id) => {
   const res = await api.delete(`/api/warehouses/${id}`);
+  return res.data;
+};
+
+
+
+
+
+
+export const createPurchase = async (data) => {
+  const res = await api.post("/api/purchases", data);
   return res.data;
 };
