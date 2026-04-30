@@ -19,6 +19,10 @@ import ReportAdmin from "../pages/Admins/ReportAdmin";
 import ProductList from "../pages/Admins/Iventory/ProductList";
 import AddPurchaseItem from "../pages/Admins/Supplier/AddPurchaseItem";
 import ReceiptPage from "../pages/Admins/Supplier/ReceiptPage";
+import { Warehouse } from "lucide-react";
+import WarehouseList from "../pages/Admins/warehouse/WareHouseList";
+import AddWarehouse from "../pages/Admins/warehouse/AddWarehouse";
+import EditWarehouse from "../pages/Admins/warehouse/EditWarehouse";
 
 const AdminRoute = () => {
   return (
@@ -44,6 +48,9 @@ const AdminRoute = () => {
             <Route path="supplier/add-sup-invoice" element={<AddPurchaseItem />} />
             <Route path="supplier/list" element={<SupplierDetail />} />
             <Route path="supplier/receipt" element={<ReceiptPage/>}/>
+            <Route path="warehouse" element={<WarehouseList/>}/>
+            <Route path="warehouse/add" element={<AddWarehouse/>}/>
+             <Route path="warehouse/edit/:id" element={<EditWarehouse/>} />
             <Route path="customer" element={<Customer />} />
             <Route path="expence" element={<Expence />} />
             <Route path="report" element={<ReportAdmin />} />

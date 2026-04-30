@@ -1,0 +1,238 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import {
+  MdArrowBack,
+  MdSave,
+  MdEdit,
+} from "react-icons/md";
+import useWarehouses from "../../../hook/useWareHouse";
+
+const EditWarehouse = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { id } = useParams();
+  const { editWarehouse, savingWarehouse, warehouses } = useWarehouses();
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    location: "",
+    note: "",
+    status: true,
+  });
+  
+  const [warehouseCode, setWarehouseCode] = useState("");
+
+  useEffect(() => {
+    // Get warehouse data from location state or fetch by id
+    if (location.state?.warehouse) {
+      const warehouse = location.state.warehouse;
+      setFormData({
+        name: warehouse.name,
+        location: warehouse.location,
+        note: warehouse.note || "",
+        status: warehouse.status === true || warehouse.status === 1,
+      });
+      setWarehouseCode(warehouse.warehouse_code);
+    } else if (id) {
+      // Find warehouse from the list
+      const warehouse = warehouses.find(w => w.id === parseInt(id));
+      if (warehouse) {
+        setFormData({
+          name: warehouse.name,
+          location: warehouse.location,
+          note: warehouse.note || "",
+          status: warehouse.status === true || warehouse.status === 1,
+        });
+        setWarehouseCode(warehouse.warehouse_code);
+      }
+    }
+  }, [location, id, warehouses]);
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.name || !formData.location) {
+      alert("សូមបំពេញឈ្មោះឃ្លាំង និងទីតាំង");
+      return;
+    }
+
+    // Prepare data for backend
+    const submitData = {
+      name: formData.name,
+      location: formData.location,
+      note: formData.note || "",
+      status: formData.status,
+    };
+
+    const result = await editWarehouse(id, submitData);
+    
+    if (result.success) {
+      navigate("/admin/warehouse");
+    } else {
+      alert("មានបញ្ហាក្នុងការកែប្រែឃ្លាំង។ សូមព្យាយាមម្តងទៀត");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm">
+        <div className="px-6 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/warehouse")}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <MdArrowBack size={20} className="text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">
+                កែប្រែឃ្លាំង
+              </h1>
+              <p className="text-gray-500 text-sm mt-0.5">
+                កែប្រែព័ត៌មានឃ្លាំង
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="max-w-3xl mx-auto">
+          <form onSubmit={handleSubmit}>
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-6 space-y-6">
+                {/* Warehouse Code (Read-only) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    កូដឃ្លាំង
+                  </label>
+                  <input
+                    type="text"
+                    value={warehouseCode}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-gray-500"
+                    disabled
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    កូដឃ្លាំងត្រូវបានបង្កើតដោយស្វ័យប្រវត្តិ
+                  </p>
+                </div>
+
+                {/* Warehouse Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ឈ្មោះឃ្លាំង <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    placeholder="បញ្ចូលឈ្មោះឃ្លាំង"
+                    disabled={savingWarehouse}
+                    autoFocus
+                  />
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ទីតាំង <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    placeholder="បញ្ចូលទីតាំង"
+                    disabled={savingWarehouse}
+                  />
+                </div>
+
+                {/* Note */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    កំណត់ចំណាំ
+                  </label>
+                  <textarea
+                    name="note"
+                    rows="4"
+                    value={formData.note}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                    placeholder="កំណត់ចំណាំបន្ថែម..."
+                    disabled={savingWarehouse}
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="status"
+                      checked={formData.status}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                      disabled={savingWarehouse}
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      កំពុងដំណើរការ
+                    </span>
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1 ml-6">
+                    ប្រសិនបើមិនបានធីក ឃ្លាំងនឹងស្ថិតក្នុងស្ថានភាពបិទដំណើរការ
+                  </p>
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="border-t border-gray-100 p-6 bg-gray-50">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/warehouse")}
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                    disabled={savingWarehouse}
+                  >
+                    បោះបង់
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingWarehouse}
+                    className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingWarehouse ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        កំពុងរក្សាទុក...
+                      </>
+                    ) : (
+                      <>
+                        <MdSave size={18} />
+                        រក្សាទុកការផ្លាស់ប្តូរ
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EditWarehouse;

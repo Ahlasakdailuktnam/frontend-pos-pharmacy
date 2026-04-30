@@ -6,14 +6,16 @@ import {
   IoPersonAddOutline,
   IoLogOutOutline,
 } from "react-icons/io5";
-import { FaChartArea, FaUserCheck } from "react-icons/fa";
+import { FaChartArea, FaUserCheck,  FaWarehouse } from "react-icons/fa";
 import {
   MdKeyboardArrowRight,
   MdKeyboardArrowDown,
   MdAddChart,
 } from "react-icons/md";
+import { BsHouseAddFill } from "react-icons/bs";
+
 import { LiaClipboardListSolid } from "react-icons/lia";
-import { TbTruckDelivery, TbReportMedical } from "react-icons/tb";
+import { TbTruckDelivery, TbReportMedical,  TbFileInvoiceFilled } from "react-icons/tb";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import Supplier from "../../pages/Admins/Supplier/Supplier";
@@ -25,6 +27,7 @@ const Sidebar = () => {
     inventory: false,
     staff: false,
     supplier: false,
+    warehouse:false,
   });
   const location = useLocation();
 
@@ -284,7 +287,7 @@ const Sidebar = () => {
                   </div>
                 </Link>
 
-                {/* Add Product */}
+               
                 <Link to="/admin/supplier/add">
                   <div
                     className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
@@ -295,6 +298,18 @@ const Sidebar = () => {
                   >
                     <IoPersonAddOutline />
                     បន្ថែមអ្នកនាំចូល
+                  </div>
+                </Link>
+                 <Link to="/admin/supplier/receipt">
+                  <div
+                    className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
+                      location.pathname === "/admin/supplier/receipt"
+                        ? "bg-blue-100 text-[#0D9488]"
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <TbFileInvoiceFilled />
+                    វិក្កយប័ត្រទំនិញនាំចូលទាំងអស់
                   </div>
                 </Link>
                 <Link to="/admin/supplier/add-sup-invoice">
@@ -309,6 +324,65 @@ const Sidebar = () => {
                     បន្ថែមវិក្ក័យបត្រទំនិញនាំចូល
                   </div>
                 </Link>
+               
+              </div>
+            )}
+          </div>
+
+
+
+          <div>
+            {/* MAIN MENU */}
+            <div
+              onClick={() => {
+                setOpenMenu((prev) => ({
+                  ...prev,
+                  warehouse: !prev.warehouse,
+                }));
+                navigate("/admin/warehouse");
+              }}
+              className={`flex items-center justify-between gap-3 p-2 rounded-lg cursor-pointer ${
+                location.pathname.includes("/admin/warehouse")
+                  ? "bg-blue-50 text-[#0D9488] border-l-4 border-[#0D9488]"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              {/* LEFT */}
+              <div className="flex items-center gap-3">
+                <FaWarehouse className="text-lg" />
+                <p>ទីតាំងស្តុកទំនិញ</p>
+              </div>
+
+              {/* RIGHT ICON */}
+              <span>
+                {openMenu.supplier ? (
+                  <MdKeyboardArrowDown />
+                ) : (
+                  <MdKeyboardArrowRight />
+                )}
+              </span>
+            </div>
+
+            {/* DROPDOWN */}
+            {openMenu.warehouse && (
+              <div className="ml-8 mt-1 flex flex-col gap-1">
+                {/* All Products */}
+                
+                {/* Add Product */}
+                <Link to="/admin/warehouse/add">
+                  <div
+                    className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
+                      location.pathname === "/admin/warehouse/add"
+                        ? "bg-blue-100 text-[#0D9488]"
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <BsHouseAddFill />
+                    បន្ថែមទីតាំងថ្មី
+                  </div>
+                </Link>
+               
+               
               </div>
             )}
           </div>
@@ -326,6 +400,7 @@ const Sidebar = () => {
               <p>ការចំណាយផ្សេងៗ</p>
             </div>
           </Link>
+          
           <Link to="/admin/report">
             <div
               className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer ${

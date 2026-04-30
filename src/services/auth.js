@@ -100,3 +100,30 @@ export const getSuppliers = async () => {
 export const addSupplier = async (data) => {
   return await api.post("/api/suppliers", data);
 };
+
+
+
+
+
+
+
+//warehouse
+export const getWarehouses = async () => {
+  const res = await api.get("/api/warehouses");
+  return res.data;
+};
+
+export const createWarehouse = async (data) => {
+  const res = await api.post("/api/warehouses", data);
+  return res.data;
+};
+
+export const updateWarehouse = async (id, data) => {
+  const res = await api.put(`/api/warehouses/${id}`, data);
+  return res.data;
+};
+
+export const deleteWarehouse = async (id) => {
+  const res = await api.delete(`/api/warehouses/${id}`);
+  return res.data;
+};

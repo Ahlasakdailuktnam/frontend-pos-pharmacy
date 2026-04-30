@@ -18,7 +18,7 @@ const ProductStock = ({
         {/* Stock Unit */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            បរិមាណស្តុក ({formData.unit}){" "}
+            បរិមាណស្តុក ({formData.unit_id}){" "}
             <span className="text-red-500">*</span>
           </label>
 
