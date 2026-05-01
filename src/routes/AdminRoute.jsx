@@ -47,9 +47,9 @@ const AdminRoute = () => {
             <Route path="supplier" element={<Supplier />} />
             <Route path="supplier/add" element={<AddSupplier />} />
             <Route path="supplier/add-sup-invoice" element={<AddPurchaseItem />} />
-            <Route path="supplier/list" element={<SupplierDetail />} />
-            <Route path="supplier/receipt" element={<ReceiptPage/>}/>
-            <Route path="supplier/receiptManagement" element={<PurchaseInvoiceManagement/>}/>
+            <Route path="supplier/details" element={<SupplierDetail />} />
+            <Route path="supplier/purchase-receipt/:id" element={<ReceiptPage/>}/>
+            <Route path="supplier/list" element={<PurchaseInvoiceManagement/>}/>
             <Route path="warehouse" element={<WarehouseList/>}/>
             <Route path="warehouse/add" element={<AddWarehouse/>}/>
              <Route path="warehouse/edit/:id" element={<EditWarehouse/>} />

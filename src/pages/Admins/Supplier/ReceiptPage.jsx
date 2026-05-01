@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   MdArrowBack,
   MdPrint,
@@ -13,112 +14,55 @@ import {
   MdLocationOn,
   MdReceipt,
   MdQrCodeScanner,
+  MdPending,
+  MdCancel,
 } from "react-icons/md";
 import { FaBoxes, FaTruck, FaMoneyBillWave, FaStore } from "react-icons/fa";
+import usePurchaseDetail from "../../../hook/purchase/usePurchaseDetail";
 
 const ReceiptPage = () => {
-  const [showPrintSuccess, setShowPrintSuccess] = useState(false);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { purchase, loading } = usePurchaseDetail(id);
   const receiptRef = useRef(null);
 
-  // Sample receipt data (would come from API/state)
-  const [receipt] = useState({
-    receiptNumber: "REC-2024-0042",
-    purchaseOrderId: "PO-2024-0123",
-    supplierName: "សហគ្រាសឱសថកម្ពុជា",
-    supplierPhone: "023 456 789",
-    supplierAddress: "ផ្លូវលេខ ២១៧, សង្កាត់ទឹកថ្លា, ខណ្ឌទួលគោក, ភ្នំពេញ",
-    receivedDate: "2024-01-15",
-    receivedBy: "សុខា ច័ន្ទ",
-    paymentMethod: "សាច់ប្រាក់",
-    paymentStatus: "បានបង់រួច",
-    notes: "ទំនិញគុណភាពល្អ ដឹកជញ្ជូនទាន់ពេល",
-    qualityCheck: "ឆ្លងកាត់",
-    items: [
-      {
-        id: 1,
-        productName: "ប៉ារ៉ាសេតាម៉ុល 500mg",
-        barcode: "8901234567890",
-        quantity: 100,
-        unitPrice: 0.25,
-        discount: 5,
-        tax: 0,
-        total: 23.75,
-      },
-      {
-        id: 2,
-        productName: "អាម៉ុកស៊ីស៊ីលីន 250mg",
-        barcode: "8901234567891",
-        quantity: 50,
-        unitPrice: 0.45,
-        discount: 0,
-        tax: 10,
-        total: 24.75,
-      },
-      {
-        id: 3,
-        productName: "វីតាមីន C 1000mg",
-        barcode: "8901234567892",
-        quantity: 200,
-        unitPrice: 0.15,
-        discount: 10,
-        tax: 0,
-        total: 27.00,
-      },
-      {
-        id: 4,
-        productName: "ថ្នាំបំបាត់ការឈឺចាប់",
-        barcode: "8901234567893",
-        quantity: 75,
-        unitPrice: 0.30,
-        discount: 0,
-        tax: 5,
-        total: 23.625,
-      },
-    ],
-  });
-
-  // Calculate totals
-  const calculateSubtotal = () => {
-    return receipt.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0).toFixed(2);
+  const getPaymentStatusText = (status) => {
+    switch(status) {
+      case "paid":
+        return { text: "បានបង់រួច", color: "green" };
+      case "partial":
+        return { text: "បានបង់ខ្លះ", color: "yellow" };
+      case "pending":
+        return { text: "មិនទាន់បង់", color: "red" };
+      default:
+        return { text: status || "—", color: "gray" };
+    }
   };
 
-  const calculateTotalDiscount = () => {
-    return receipt.items.reduce((sum, item) => {
-      const subtotal = item.quantity * item.unitPrice;
-      const discountAmount = (subtotal * item.discount) / 100;
-      return sum + discountAmount;
-    }, 0).toFixed(2);
+  const getPaymentMethodText = (method) => {
+    switch(method) {
+      case "cash":
+        return "សាច់ប្រាក់";
+      case "bank_transfer":
+        return "ផ្ទេរធនាគារ";
+      case "credit":
+        return "បង់រំលស់";
+      default:
+        return method || "—";
+    }
   };
 
-  const calculateTotalTax = () => {
-    return receipt.items.reduce((sum, item) => {
-      const subtotal = item.quantity * item.unitPrice;
-      const discountAmount = (subtotal * item.discount) / 100;
-      const taxAmount = ((subtotal - discountAmount) * item.tax) / 100;
-      return sum + taxAmount;
-    }, 0).toFixed(2);
+  const formatCurrency = (amount) => {
+    const numAmount = parseFloat(amount) || 0;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(numAmount);
   };
 
-  const calculateGrandTotal = () => {
-    return receipt.items.reduce((sum, item) => sum + item.total, 0).toFixed(2);
-  };
-
-  // Handle print
-  const handlePrint = () => {
-    const printContent = receiptRef.current.innerHTML;
-    const originalContent = document.body.innerHTML;
-    
-    document.body.innerHTML = printContent;
-    window.print();
-    document.body.innerHTML = originalContent;
-    window.location.reload();
-    
-    setShowPrintSuccess(true);
-    setTimeout(() => setShowPrintSuccess(false), 3000);
-  };
-
-  // Format date
   const formatDate = (dateString) => {
+    if (!dateString) return "—";
     const date = new Date(dateString);
     return date.toLocaleDateString('km-KH', {
       year: 'numeric',
@@ -127,6 +71,78 @@ const ReceiptPage = () => {
     });
   };
 
+  const calculateSubtotal = () => {
+    if (!purchase?.items) return 0;
+    return purchase.items.reduce((sum, item) => sum + (item.qty * item.unit_cost), 0);
+  };
+
+  const calculateTotalDiscount = () => {
+    if (!purchase?.items) return 0;
+    return purchase.items.reduce((sum, item) => {
+      const subtotal = item.qty * item.unit_cost;
+      const discountAmount = (subtotal * (item.discount_percent || 0)) / 100;
+      return sum + discountAmount;
+    }, 0);
+  };
+
+  const calculateTotalTax = () => {
+    if (!purchase?.items) return 0;
+    return purchase.items.reduce((sum, item) => {
+      const subtotal = item.qty * item.unit_cost;
+      const discountAmount = (subtotal * (item.discount_percent || 0)) / 100;
+      const taxAmount = ((subtotal - discountAmount) * (item.tax_percent || 0)) / 100;
+      return sum + taxAmount;
+    }, 0);
+  };
+
+  const handlePrint = () => {
+    const printContent = receiptRef.current.innerHTML;
+    const originalContent = document.body.innerHTML;
+    
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+    window.location.reload();
+  };
+
+  const handleBack = () => {
+    navigate('/purchase-invoices');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">កំពុងផ្ទុកទិន្នន័យ...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!purchase) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MdCancel className="text-red-600 text-3xl" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">មិនមានទិន្នន័យ</h3>
+          <p className="text-gray-500">មិនឃើញមានព័ត៌មានបង្កាន់ដៃទេ</p>
+          <button
+            onClick={handleBack}
+            className="mt-4 px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors"
+          >
+            ត្រឡប់ក្រោយ
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const paymentStatus = getPaymentStatusText(purchase.payment_status);
+  const remainingAmount = (parseFloat(purchase.grand_total) || 0) - (parseFloat(purchase.paid_amount) || 0);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
       {/* Header */}
@@ -134,7 +150,10 @@ const ReceiptPage = () => {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+              <button 
+                onClick={handleBack}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              >
                 <MdArrowBack size={20} className="text-gray-600" />
               </button>
               <div>
@@ -166,19 +185,6 @@ const ReceiptPage = () => {
       </div>
 
       <div className="p-6">
-        {/* Print Success Message */}
-        {showPrintSuccess && (
-          <div className="fixed top-24 right-6 z-50 animate-slide-in">
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 shadow-lg">
-              <MdCheckCircle className="text-green-600 text-2xl" />
-              <div>
-                <p className="font-semibold text-green-800">បោះពុម្ពជោគជ័យ!</p>
-                <p className="text-sm text-green-600">បង្កាន់ដៃកំពុងបោះពុម្ព</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Receipt Content */}
         <div ref={receiptRef} className="max-w-5xl mx-auto">
           {/* Main Receipt Card */}
@@ -191,8 +197,8 @@ const ReceiptPage = () => {
               <h2 className="text-3xl font-bold">បង្កាន់ដៃទទួលទំនិញ</h2>
               <p className="text-teal-100 mt-2">ឱសថស្ថាន មិត្តភាព</p>
               <div className="mt-4 pt-4 border-t border-teal-500 inline-block">
-                <p className="text-sm">លេខបង្កាន់ដៃ: <span className="font-mono font-bold">{receipt.receiptNumber}</span></p>
-                <p className="text-sm">លេខលំដាប់ទិញ: {receipt.purchaseOrderId}</p>
+                <p className="text-sm">លេខបង្កាន់ដៃ: <span className="font-mono font-bold">{purchase.purchase_code || purchase.invoice_number || "—"}</span></p>
+                <p className="text-sm">លេខវិក្កយបត្រ: {purchase.invoice_number || "—"}</p>
               </div>
             </div>
 
@@ -206,14 +212,16 @@ const ReceiptPage = () => {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wide">អ្នកផ្គត់ផ្គង់</p>
-                      <p className="font-semibold text-gray-800 text-lg">{receipt.supplierName}</p>
+                      <p className="font-semibold text-gray-800 text-lg">
+                        {purchase.supplier?.company_name_kh || purchase.supplier?.company_name_en || "—"}
+                      </p>
                       <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
                         <MdPhone size={14} />
-                        <span>{receipt.supplierPhone}</span>
+                        <span>{purchase.supplier?.phone || "—"}</span>
                       </div>
                       <div className="flex items-start gap-2 mt-1 text-sm text-gray-600">
                         <MdLocationOn size={14} className="mt-0.5" />
-                        <span>{receipt.supplierAddress}</span>
+                        <span>{purchase.supplier?.address || "—"}</span>
                       </div>
                     </div>
                   </div>
@@ -229,20 +237,20 @@ const ReceiptPage = () => {
                       <div className="grid grid-cols-2 gap-2 mt-1">
                         <div>
                           <p className="text-xs text-gray-500">ថ្ងៃទទួល</p>
-                          <p className="text-sm font-medium">{formatDate(receipt.receivedDate)}</p>
+                          <p className="text-sm font-medium">{formatDate(purchase.purchase_date)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">អ្នកទទួល</p>
-                          <p className="text-sm font-medium">{receipt.receivedBy}</p>
+                          <p className="text-xs text-gray-500">ថ្ងៃកំណត់</p>
+                          <p className="text-sm font-medium">{formatDate(purchase.expected_date)}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">វិធីទូទាត់</p>
-                          <p className="text-sm font-medium">{receipt.paymentMethod}</p>
+                          <p className="text-sm font-medium">{getPaymentMethodText(purchase.payment_method)}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">ស្ថានភាព</p>
-                          <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                            {receipt.paymentStatus}
+                          <span className={`inline-block px-2 py-1 bg-${paymentStatus.color}-100 text-${paymentStatus.color}-700 rounded-full text-xs font-medium`}>
+                            {paymentStatus.text}
                           </span>
                         </div>
                       </div>
@@ -274,20 +282,20 @@ const ReceiptPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {receipt.items.map((item, index) => (
+                    {purchase.items?.map((item, index) => (
                       <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                         <td className="py-3 px-2 text-sm text-gray-500">{index + 1}</td>
                         <td className="py-3 px-2">
-                          <p className="font-medium text-gray-800">{item.productName}</p>
+                          <p className="font-medium text-gray-800">{item.product?.name || "—"}</p>
                         </td>
                         <td className="py-3 px-2">
-                          <span className="text-xs font-mono text-gray-500">{item.barcode}</span>
+                          <span className="text-xs font-mono text-gray-500">{item.product?.barcode || "—"}</span>
                         </td>
-                        <td className="py-3 px-2 text-right text-sm font-medium">{item.quantity}</td>
-                        <td className="py-3 px-2 text-right text-sm">${item.unitPrice.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-sm text-orange-600">{item.discount}%</td>
-                        <td className="py-3 px-2 text-right text-sm text-blue-600">{item.tax}%</td>
-                        <td className="py-3 px-2 text-right font-semibold text-teal-600">${item.total.toFixed(2)}</td>
+                        <td className="py-3 px-2 text-right text-sm font-medium">{item.qty}</td>
+                        <td className="py-3 px-2 text-right text-sm">{formatCurrency(item.unit_cost)}</td>
+                        <td className="py-3 px-2 text-right text-sm text-orange-600">{item.discount_percent || 0}%</td>
+                        <td className="py-3 px-2 text-right text-sm text-blue-600">{item.tax_percent || 0}%</td>
+                        <td className="py-3 px-2 text-right font-semibold text-teal-600">{formatCurrency(item.line_total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -301,57 +309,45 @@ const ReceiptPage = () => {
                     <div className="w-full md:w-80 space-y-3">
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">ទំហំទឹកប្រាក់សរុប:</span>
-                        <span className="font-medium">${calculateSubtotal()}</span>
+                        <span className="font-medium">{formatCurrency(calculateSubtotal())}</span>
                       </div>
                       <div className="flex justify-between py-2 border-t border-gray-200">
                         <span className="text-gray-600">បញ្ចុះតម្លៃសរុប:</span>
-                        <span className="text-orange-600">- ${calculateTotalDiscount()}</span>
+                        <span className="text-orange-600">- {formatCurrency(calculateTotalDiscount())}</span>
                       </div>
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">ពន្ធសរុប:</span>
-                        <span className="text-blue-600">+ ${calculateTotalTax()}</span>
+                        <span className="text-blue-600">+ {formatCurrency(calculateTotalTax())}</span>
                       </div>
                       <div className="flex justify-between py-3 border-t-2 border-gray-300">
                         <span className="text-lg font-bold text-gray-800">សរុបទាំងអស់:</span>
-                        <span className="text-2xl font-bold text-teal-600">${calculateGrandTotal()}</span>
+                        <span className="text-2xl font-bold text-teal-600">{formatCurrency(purchase.grand_total)}</span>
                       </div>
+                      {purchase.payment_status !== "paid" && (
+                        <div className="flex justify-between py-2 border-t border-gray-200">
+                          <span className="text-gray-600">នៅសល់បង់:</span>
+                          <span className="text-lg font-bold text-orange-600">{formatCurrency(remainingAmount)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Notes & QR Code */}
-              <div className="mt-8 grid md:grid-cols-2 gap-6">
-                <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-100">
+              {/* Notes */}
+              {purchase.note && (
+                <div className="mt-8 bg-yellow-50 rounded-xl p-4 border border-yellow-100">
                   <div className="flex items-start gap-2">
                     <div className="text-yellow-600 mt-0.5">
                       <MdReceipt size={18} />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-yellow-800 mb-1">កំណត់ចំណាំ</p>
-                      <p className="text-sm text-yellow-700">{receipt.notes}</p>
+                      <p className="text-sm text-yellow-700">{purchase.note}</p>
                     </div>
                   </div>
                 </div>
-
-                <div className="bg-green-50 rounded-xl p-4 border border-green-100 flex items-center justify-between">
-                  <div className="flex items-start gap-2">
-                    <div className="text-green-600 mt-0.5">
-                      <MdCheckCircle size={18} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-green-800 mb-1">ការត្រួតពិនិត្យគុណភាព</p>
-                      <p className="text-sm text-green-700">
-                        {receipt.qualityCheck === "ឆ្លងកាត់" ? "✓ ទំនិញឆ្លងកាត់ការត្រួតពិនិត្យ" : "⚠ ទំនិញត្រូវការត្រួតពិនិត្យបន្ថែម"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <MdQrCodeScanner size={60} className="text-gray-600" />
-                    <p className="text-xs text-gray-500 mt-1">ស្កេន QR</p>
-                  </div>
-                </div>
-              </div>
+              )}
 
               {/* Footer */}
               <div className="mt-8 pt-6 border-t border-gray-200 text-center">
@@ -369,10 +365,16 @@ const ReceiptPage = () => {
 
           {/* Action Buttons Bottom */}
           <div className="flex justify-center gap-4 mt-6">
-            <button className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium">
+            <button 
+              onClick={handleBack}
+              className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium"
+            >
               ត្រឡប់ក្រោយ
             </button>
-            <button className="px-8 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all font-medium shadow-md">
+            <button 
+              onClick={() => navigate('/add-purchase')}
+              className="px-8 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all font-medium shadow-md"
+            >
               បង្កើតបង្កាន់ដៃថ្មី
             </button>
           </div>
@@ -402,20 +404,6 @@ const ReceiptPage = () => {
           .no-print {
             display: none !important;
           }
-        }
-
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
         }
       `}</style>
     </div>

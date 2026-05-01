@@ -145,3 +145,12 @@ export const createPurchase = async (data) => {
   const res = await api.post("/api/purchases", data);
   return res.data;
 };
+export const getPurchases = async () => {
+  const res = await api.get("/api/purchases");
+  return res.data;
+};
+
+export const getPurchaseById = async (id) => {
+  const res = await api.get(`/api/purchases/${id}`);
+  return res.data;
+};
