@@ -35,9 +35,10 @@ const ProductFilters = ({
           onChange={(e) => setCategory(e.target.value)}
           className="px-4 py-2.5 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
         >
-          {categories.map((item) => (
-            <option key={item} value={item}>
-              {item === "all" ? "ទាំងអស់" : item}
+          <option value="all">ទាំងអស់​</option>
+          {(categories || []).map((c) => (
+            <option key={c.id} value={c.name}>
+              {c.name}
             </option>
           ))}
         </select>

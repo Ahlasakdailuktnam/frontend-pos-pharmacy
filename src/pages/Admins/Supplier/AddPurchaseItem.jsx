@@ -6,40 +6,38 @@ import {
   MdCheckCircle,
   MdAdd,
   MdDelete,
-  MdLocalShipping,
-  MdInventory,
   MdAttachMoney,
   MdDateRange,
   MdPerson,
   MdNote,
   MdReceipt,
-  MdSearch,
   MdPrint,
   MdCreditCard,
-  MdAccountBalance,
-  MdStore,
   MdKeyboardArrowDown,
-  MdMoreVert,
-  MdShoppingCart,
   MdOutlineWarehouse,
-  MdOutlineLocalOffer,
-  MdOutlinePercent,
-  MdOutlineAttachMoney,
-  MdOutlineReceiptLong,
-  MdOutlineFactCheck,
   MdOutlinePendingActions,
-  MdOutlineInventory,
   MdOutlineVerified,
   MdInfoOutline,
   MdPayment,
+  MdEmail,
 } from "react-icons/md";
-import { FaBoxes, FaTruck, FaWarehouse, FaPercentage, FaRegCalendarAlt, FaRegBuilding, FaPhoneAlt, FaMapMarkerAlt, FaRegMoneyBillAlt, FaRegCreditCard, FaExchangeAlt, FaPlusCircle, FaMinusCircle, FaBarcode } from "react-icons/fa";
+import { FaBoxes, FaTruck, FaWarehouse, FaRegCalendarAlt, FaRegBuilding, FaPhoneAlt, FaMapMarkerAlt, FaPlusCircle, FaMinusCircle, FaBarcode } from "react-icons/fa";
+import useSupplierSearch from "../../../hook/useSupplierSearch";
+import useProducts from "../../../hook/useProducts";
+import useCreatePurchase from "../../../hook/useCreatePurchase";
+import useWarehouses from "../../../hook/useWarehouse";
 
 const AddPurchaseItem = () => {
+  // Use the hooks
+  const { keyword, setKeyword, results: suppliers, loading: loadingSuppliers } = useSupplierSearch();
+  const { products, loading: loadingProducts, fetchProducts } = useProducts();
+  const { handleCreatePurchase, loading: savingPurchase, error: purchaseError, success: purchaseSuccess, setSuccess: setPurchaseSuccess } = useCreatePurchase();
+  const { warehouses, loadingWarehouse } = useWarehouses();
+
   // UI State
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
-  const [loadingSave, setLoadingSave] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   
   // Form state matching backend structure
   const [formData, setFormData] = useState({
@@ -60,11 +58,12 @@ const AddPurchaseItem = () => {
   });
 
   // Supplier search state
-  const [supplierSearchTerm, setSupplierSearchTerm] = useState("");
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
-  const [suppliers, setSuppliers] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
-  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+
+  // Product search state for each row
+  const [productSearchTerms, setProductSearchTerms] = useState({});
+  const [showProductDropdowns, setShowProductDropdowns] = useState({});
 
   // Product items state
   const [items, setItems] = useState([
@@ -81,79 +80,31 @@ const AddPurchaseItem = () => {
     },
   ]);
 
-  // Mock suppliers data (will be replaced with API call)
-  const mockSuppliers = [
-    {
-      id: 1,
-      name: "សហគ្រាសផ្គត់ផ្គង់ ម៉េង អ៊ី",
-      code: "SUP-001",
-      phone: "012 345 678",
-      address: "ផ្ទះលេខ 123, ផ្លូវព្រះមុន្នីវង្ស, សង្កាត់បឹងកេងកង, ខណ្ឌបឹងកេងកង, ភ្នំពេញ",
-      email: "meng@supplier.com",
-      contact_person: "លោក ម៉េង វិចិត្រ",
-    },
-    {
-      id: 2,
-      name: "ក្រុមហ៊ុន សុខា សុីឈើ",
-      code: "SUP-002",
-      phone: "023 456 789",
-      address: "ផ្ទះលេខ 45, ផ្លូវជាតិលេខ6, សង្កាត់ស្លក្រាម, ក្រុងសៀមរាប, ខេត្តសៀមរាប",
-      email: "sokha@supplier.com",
-      contact_person: "លោកស្រី សុខា សុីឈើ",
-    },
-    {
-      id: 3,
-      name: "ផ្គត់ផ្គង់ វឌ្ឍនា",
-      code: "SUP-003",
-      phone: "016 789 012",
-      address: "ផ្ទះលេខ 78, ផ្លូវជាតិលេខ7, ក្រុងកំពង់ចាម, ខេត្តកំពង់ចាម",
-      email: "vaddhana@supplier.com",
-      contact_person: "លោក វឌ្ឍនា សុខ",
-    },
-    {
-      id: 4,
-      name: "ក្រុមហ៊ុន សំណាង ទ្រីឌីង",
-      code: "SUP-004",
-      phone: "011 234 567",
-      address: "ផ្ទះលេខ 234, ផ្លូវជាតិលេខ5, ក្រុងបាត់ដំបង, ខេត្តបាត់ដំបង",
-      email: "samnang@supplier.com",
-      contact_person: "លោក សំណាង មានជ័យ",
-    },
-  ];
-
-  // Mock products data (will be replaced with API call)
-  const mockProducts = [
-    { id: 1, code: "P001", name: "អង្ករស្រូវ ៥០គីឡូ", barcode: "8934567890123", cost: 50.00, box_size: 1 },
-    { id: 2, code: "P002", name: "ស្ករស ៥០គីឡូ", barcode: "8934567890124", cost: 40.00, box_size: 1 },
-    { id: 3, code: "P003", name: "ប្រេងចម្អិន ២០លីត្រ", barcode: "8934567890125", cost: 27.50, box_size: 1 },
-    { id: 4, code: "P004", name: "ទូរទឹកកក", barcode: "8934567890126", cost: 800.00, box_size: 1 },
-    { id: 5, code: "P005", name: "ម៉ាស៊ីនត្រជាក់", barcode: "8934567890127", cost: 600.00, box_size: 1 },
-    { id: 6, code: "P006", name: "សាប៊ូកក់សក់", barcode: "8934567890128", cost: 8.90, box_size: 1 },
-    { id: 7, code: "P007", name: "ឡេការពារកម្តៅថ្ងៃ", barcode: "8934567890129", cost: 9.89, box_size: 1 },
-  ];
-
-  // Warehouses data
-  const warehouses = [
-    { id: 1, name: "ឃ្លាំងកណ្តាល", location: "ភ្នំពេញ", manager: "លោក សុខ សុភ័ក្រ" },
-    { id: 2, name: "ឃ្លាំងថ្នាំកម្តៅ", location: "សៀមរាប", manager: "លោកស្រី ម៉ែន ម៉ាលី" },
-    { id: 3, name: "ឃ្លាំងបម្រុង", location: "កំពង់ចាម", manager: "លោក ស៊ន សុខា" },
-  ];
-
-  // Load suppliers (simulate API call)
+  // Fetch products when component mounts
   useEffect(() => {
-    setLoadingSuppliers(true);
-    setTimeout(() => {
-      setSuppliers(mockSuppliers);
-      setLoadingSuppliers(false);
-    }, 500);
+    fetchProducts();
   }, []);
 
-  // Filter suppliers based on search term
-  const filteredSuppliers = suppliers.filter(supplier =>
-    supplier.name.toLowerCase().includes(supplierSearchTerm.toLowerCase()) ||
-    supplier.code.toLowerCase().includes(supplierSearchTerm.toLowerCase()) ||
-    supplier.phone.includes(supplierSearchTerm)
-  );
+  // Monitor purchase success from hook
+  useEffect(() => {
+    if (purchaseSuccess) {
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setPurchaseSuccess(false);
+        resetForm();
+      }, 3000);
+    }
+  }, [purchaseSuccess]);
+
+  // Monitor purchase error from hook
+  useEffect(() => {
+    if (purchaseError) {
+      setErrorMessage(purchaseError);
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
+    }
+  }, [purchaseError]);
 
   // Handle supplier selection
   const handleSupplierSelect = (supplier) => {
@@ -162,8 +113,67 @@ const AddPurchaseItem = () => {
       ...prev,
       supplier_id: supplier.id,
     }));
-    setSupplierSearchTerm(supplier.name);
+    setKeyword(supplier.company_name_kh || supplier.company_name_en || "");
     setShowSupplierDropdown(false);
+  };
+
+  // Helper function to safely parse number values
+  const safeParseNumber = (value, defaultValue = 0) => {
+    if (value === null || value === undefined) return defaultValue;
+    const num = parseFloat(value);
+    return isNaN(num) ? defaultValue : num;
+  };
+
+  // Filter products based on search term for specific row
+  const getFilteredProducts = (searchTerm) => {
+    if (!searchTerm) return [];
+    return products.filter(product =>
+      (product.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (product.name_en?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (product.product_code?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (product.barcode || "").includes(searchTerm)
+    );
+  };
+
+  // Handle product selection for a row
+  const handleProductSelect = (index, product) => {
+    const productCost = safeParseNumber(product.cost);
+    
+    const updatedItems = [...items];
+    updatedItems[index].product_id = product.id;
+    updatedItems[index].product_name = product.name;
+    updatedItems[index].product_code = product.product_code;
+    updatedItems[index].barcode = product.barcode;
+    updatedItems[index].unit_cost = productCost;
+    updatedItems[index].qty = 1;
+    updatedItems[index].discount_percent = 0;
+    updatedItems[index].tax_percent = 0;
+    updatedItems[index].line_total = productCost;
+    setItems(updatedItems);
+    
+    setProductSearchTerms({
+      ...productSearchTerms,
+      [index]: product.name
+    });
+    
+    setShowProductDropdowns({
+      ...showProductDropdowns,
+      [index]: false
+    });
+    
+    calculateLineTotal(index, 1, productCost, 0, 0);
+  };
+
+  // Handle product search input change
+  const handleProductSearchChange = (index, value) => {
+    setProductSearchTerms({
+      ...productSearchTerms,
+      [index]: value
+    });
+    setShowProductDropdowns({
+      ...showProductDropdowns,
+      [index]: true
+    });
   };
 
   // Handle form input changes
@@ -173,27 +183,6 @@ const AddPurchaseItem = () => {
       ...prev,
       [name]: value,
     }));
-  };
-
-  // Handle product ID input and auto-fill
-  const handleProductIdBlur = (index, productId) => {
-    if (productId) {
-      const product = mockProducts.find(p => p.id === parseInt(productId) || p.code === productId || p.barcode === productId);
-      if (product) {
-        const updatedItems = [...items];
-        updatedItems[index].product_id = product.id;
-        updatedItems[index].product_name = product.name;
-        updatedItems[index].product_code = product.code;
-        updatedItems[index].barcode = product.barcode;
-        updatedItems[index].unit_cost = product.cost;
-        updatedItems[index].qty = 1;
-        updatedItems[index].discount_percent = 0;
-        updatedItems[index].tax_percent = 0;
-        updatedItems[index].line_total = product.cost;
-        setItems(updatedItems);
-        calculateLineTotal(index, 1, product.cost, 0, 0);
-      }
-    }
   };
 
   // Calculate line total for an item
@@ -208,14 +197,13 @@ const AddPurchaseItem = () => {
     updatedItems[index].line_total = lineTotal;
     setItems(updatedItems);
     
-    // Recalculate totals
     calculateTotals();
   };
 
   // Handle item field changes
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...items];
-    const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
+    const numValue = safeParseNumber(value);
     updatedItems[index][field] = numValue;
     setItems(updatedItems);
     
@@ -230,7 +218,7 @@ const AddPurchaseItem = () => {
     }
   };
 
-  // Calculate all totals (subtotal, discount_total, tax_total, grand_total)
+  // Calculate all totals
   const calculateTotals = () => {
     let subtotal = 0;
     let discountTotal = 0;
@@ -282,6 +270,12 @@ const AddPurchaseItem = () => {
     if (items.length > 1) {
       const updatedItems = items.filter((_, i) => i !== index);
       setItems(updatedItems);
+      const newSearchTerms = { ...productSearchTerms };
+      const newDropdowns = { ...showProductDropdowns };
+      delete newSearchTerms[index];
+      delete newDropdowns[index];
+      setProductSearchTerms(newSearchTerms);
+      setShowProductDropdowns(newDropdowns);
       setTimeout(() => calculateTotals(), 0);
     }
   };
@@ -294,81 +288,128 @@ const AddPurchaseItem = () => {
   // Prepare data for backend submission
   const prepareSubmitData = () => {
     return {
-      supplier_id: formData.supplier_id,
-      warehouse_id: formData.warehouse_id,
+      supplier_id: parseInt(formData.supplier_id),
+      warehouse_id: parseInt(formData.warehouse_id),
       purchase_date: formData.purchase_date,
       expected_date: formData.expected_date || null,
       invoice_number: formData.invoice_number,
       payment_method: formData.payment_method,
       payment_status: formData.payment_status,
-      paid_amount: formData.paid_amount,
-      subtotal: formData.subtotal,
-      discount_total: formData.discount_total,
-      tax_total: formData.tax_total,
-      grand_total: formData.grand_total,
+      paid_amount: safeParseNumber(formData.paid_amount),
+      subtotal: safeParseNumber(formData.subtotal),
+      discount_total: safeParseNumber(formData.discount_total),
+      tax_total: safeParseNumber(formData.tax_total),
+      grand_total: safeParseNumber(formData.grand_total),
       note: formData.note,
       items: items.map(item => ({
-        product_id: item.product_id,
-        qty: item.qty,
-        unit_cost: item.unit_cost,
-        discount_percent: item.discount_percent,
-        tax_percent: item.tax_percent,
-        line_total: item.line_total,
+        product_id: parseInt(item.product_id),
+        qty: parseInt(item.qty),
+        unit_cost: safeParseNumber(item.unit_cost),
+        discount_percent: safeParseNumber(item.discount_percent),
+        tax_percent: safeParseNumber(item.tax_percent),
+        line_total: safeParseNumber(item.line_total),
       })),
     };
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      supplier_id: "",
+      warehouse_id: "",
+      purchase_date: new Date().toISOString().split("T")[0],
+      expected_date: "",
+      invoice_number: "",
+      payment_method: "cash",
+      payment_status: "pending",
+      paid_amount: 0,
+      subtotal: 0,
+      discount_total: 0,
+      tax_total: 0,
+      grand_total: 0,
+      note: "",
+      items: [],
+    });
+    setItems([{ 
+      product_id: "", 
+      product_name: "", 
+      product_code: "",
+      barcode: "",
+      qty: 1, 
+      unit_cost: 0, 
+      discount_percent: 0, 
+      tax_percent: 0, 
+      line_total: 0 
+    }]);
+    setSelectedSupplier(null);
+    setKeyword("");
+    setProductSearchTerms({});
+    setShowProductDropdowns({});
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.supplier_id) {
-      alert("សូមជ្រើសរើសអ្នកផ្គត់ផ្គង់");
+      setErrorMessage("សូមជ្រើសរើសអ្នកផ្គត់ផ្គង់");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
       return;
     }
     
     if (!formData.warehouse_id) {
-      alert("សូមជ្រើសរើសឃ្លាំង");
+      setErrorMessage("សូមជ្រើសរើសឃ្លាំង");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
       return;
     }
     
     if (items.some(item => !item.product_id)) {
-      alert("សូមបំពេញព័ត៌មានផលិតផលឱ្យបានពេញលេញ");
+      setErrorMessage("សូមបំពេញព័ត៌មានផលិតផលឱ្យបានពេញលេញ");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
+      return;
+    }
+    
+    if (items.some(item => item.qty <= 0)) {
+      setErrorMessage("បរិមាណទំនិញត្រូវតែធំជាង 0");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
       return;
     }
     
     if (formData.payment_status === "partial" && formData.paid_amount <= 0) {
-      alert("សូមបញ្ចូលចំនួនទឹកប្រាក់ដែលបានបង់");
+      setErrorMessage("សូមបញ្ចូលចំនួនទឹកប្រាក់ដែលបានបង់");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
       return;
     }
     
     if (formData.payment_status === "partial" && formData.paid_amount > formData.grand_total) {
-      alert("ចំនួនទឹកប្រាក់ដែលបានបង់មិនអាចលើសពីចំនួនសរុបបានទេ");
+      setErrorMessage("ចំនួនទឹកប្រាក់ដែលបានបង់មិនអាចលើសពីចំនួនសរុបបានទេ");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
       return;
     }
     
-    setLoadingSave(true);
+    const submitData = prepareSubmitData();
+    const result = await handleCreatePurchase(submitData);
     
-    // Simulate API call
-    setTimeout(() => {
-      const submitData = prepareSubmitData();
-      console.log("Submitting data:", submitData);
-      setLoadingSave(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      
-      // Reset form after success
-      // window.location.reload(); // Uncomment when connected to real API
-    }, 1000);
+    if (!result.success) {
+      setErrorMessage(result.message || "មានបញ្ហាក្នុងការរក្សាទុកទិន្នន័យ");
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
+    }
   };
 
   const formatCurrency = (amount) => {
+    const numAmount = safeParseNumber(amount);
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(numAmount);
   };
 
   return (
@@ -384,6 +425,17 @@ const AddPurchaseItem = () => {
               <div>
                 <p className="font-semibold text-slate-800">ប្រតិបត្តិការជោគជ័យ!</p>
                 <p className="text-sm text-slate-500">ទិន្នន័យត្រូវបានរក្សាទុកក្នុងប្រព័ន្ធ</p>
+              </div>
+            </div>
+          )}
+          {showError && (
+            <div className="flex items-center gap-3 bg-white rounded-2xl shadow-xl border-l-4 border-red-500 p-4 min-w-[320px]">
+              <div className="bg-red-100 rounded-full p-2">
+                <MdCancel className="text-red-600 text-xl" />
+              </div>
+              <div>
+                <p className="font-semibold text-slate-800">កំហុស!</p>
+                <p className="text-sm text-slate-500">{errorMessage}</p>
               </div>
             </div>
           )}
@@ -425,8 +477,8 @@ const AddPurchaseItem = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Forms */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Supplier Information Card with Auto-fill and Detailed Display */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
+              {/* Supplier Information Card */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm  hover:shadow-md transition-shadow duration-300">
                 <div className="px-6 py-4 bg-gradient-to-r from-teal-50/50 to-white border-b border-slate-100 flex items-center gap-2">
                   <div className="p-1.5 bg-teal-100 rounded-lg">
                     <FaTruck className="text-teal-600" size={16} />
@@ -434,8 +486,8 @@ const AddPurchaseItem = () => {
                   <h2 className="text-lg font-semibold text-slate-800">ព័ត៌មានអ្នកផ្គត់ផ្គង់</h2>
                 </div>
                 <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="relative md:col-span-2">
+                  <div className="grid grid-cols-1 gap-5">
+                    <div className="relative">
                       <label className="block text-sm font-medium text-slate-700 mb-1.5">
                         អ្នកផ្គត់ផ្គង់ <span className="text-red-500">*</span>
                       </label>
@@ -443,13 +495,14 @@ const AddPurchaseItem = () => {
                         <MdPerson className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
                           type="text"
-                          value={supplierSearchTerm}
+                          value={keyword}
                           onChange={(e) => {
-                            setSupplierSearchTerm(e.target.value);
+                            setKeyword(e.target.value);
                             setShowSupplierDropdown(true);
+                            setSelectedSupplier(null);
                           }}
                           onFocus={() => setShowSupplierDropdown(true)}
-                          className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                          className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all bg-white"
                           placeholder="ស្វែងរកតាមឈ្មោះ កូដ ឬ លេខទូរស័ព្ទ..."
                           autoComplete="off"
                         />
@@ -457,15 +510,15 @@ const AddPurchaseItem = () => {
                       </div>
                       
                       {/* Supplier Dropdown */}
-                      {showSupplierDropdown && (
-                        <div className="absolute z-20 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl max-h-64 overflow-y-auto">
+                      {showSupplierDropdown && keyword && (
+                        <div className="absolute z-100 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                           {loadingSuppliers ? (
                             <div className="p-4 text-center text-slate-400">
                               <div className="animate-spin w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-2"></div>
                               កំពុងផ្ទុក...
                             </div>
-                          ) : filteredSuppliers.length > 0 ? (
-                            filteredSuppliers.map(supplier => (
+                          ) : suppliers.length > 0 ? (
+                            suppliers.map(supplier => (
                               <div
                                 key={supplier.id}
                                 onClick={() => handleSupplierSelect(supplier)}
@@ -473,8 +526,8 @@ const AddPurchaseItem = () => {
                               >
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <p className="font-medium text-slate-800">{supplier.name}</p>
-                                    <p className="text-xs text-slate-500">{supplier.code}</p>
+                                    <p className="font-medium text-slate-800">{supplier.company_name_kh || supplier.company_name_en}</p>
+                                    <p className="text-xs text-slate-500">{supplier.supplier_code}</p>
                                   </div>
                                   <p className="text-xs text-slate-500">{supplier.phone}</p>
                                 </div>
@@ -488,52 +541,50 @@ const AddPurchaseItem = () => {
                       )}
                     </div>
                     
-                    {/* Auto-filled supplier information with detailed display */}
+                    {/* Auto-filled supplier information */}
                     {selectedSupplier && (
-                      <>
-                        <div className="md:col-span-2 bg-teal-50/30 rounded-xl p-4 border border-teal-100">
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="p-2 bg-teal-100 rounded-lg">
-                              <FaRegBuilding className="text-teal-600" size={18} />
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-slate-800 text-lg">{selectedSupplier.name}</h3>
-                              <p className="text-sm text-teal-600">{selectedSupplier.code}</p>
+                      <div className="bg-teal-50/30 rounded-xl p-4 border border-teal-100">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="p-2 bg-teal-100 rounded-lg">
+                            <FaRegBuilding className="text-teal-600" size={18} />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-slate-800 text-lg">{selectedSupplier.company_name_kh || selectedSupplier.company_name_en}</h3>
+                            <p className="text-sm text-teal-600">{selectedSupplier.supplier_code}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                          <div className="flex items-start gap-2">
+                            <FaPhoneAlt className="text-teal-500 mt-0.5" size={14} />
+                            <div>
+                              <p className="text-xs text-slate-500">ទូរស័ព្ទ</p>
+                              <p className="text-sm text-slate-700 font-medium">{selectedSupplier.phone || "—"}</p>
                             </div>
                           </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                            <div className="flex items-start gap-2">
-                              <FaPhoneAlt className="text-teal-500 mt-0.5" size={14} />
-                              <div>
-                                <p className="text-xs text-slate-500">ទូរស័ព្ទ</p>
-                                <p className="text-sm text-slate-700 font-medium">{selectedSupplier.phone}</p>
-                              </div>
+                          <div className="flex items-start gap-2">
+                            <MdPerson className="text-teal-500 mt-0.5" size={14} />
+                            <div>
+                              <p className="text-xs text-slate-500">អ្នកទំនាក់ទំនង</p>
+                              <p className="text-sm text-slate-700 font-medium">{selectedSupplier.contact_person || "—"}</p>
                             </div>
-                            <div className="flex items-start gap-2">
-                              <MdPerson className="text-teal-500 mt-0.5" size={14} />
-                              <div>
-                                <p className="text-xs text-slate-500">អ្នកទំនាក់ទំនង</p>
-                                <p className="text-sm text-slate-700 font-medium">{selectedSupplier.contact_person || "—"}</p>
-                              </div>
+                          </div>
+                          <div className="flex items-start gap-2 md:col-span-2">
+                            <FaMapMarkerAlt className="text-teal-500 mt-0.5" size={14} />
+                            <div>
+                              <p className="text-xs text-slate-500">អាសយដ្ឋាន</p>
+                              <p className="text-sm text-slate-700">{selectedSupplier.address || "—"}</p>
                             </div>
-                            <div className="flex items-start gap-2 md:col-span-2">
-                              <FaMapMarkerAlt className="text-teal-500 mt-0.5" size={14} />
-                              <div>
-                                <p className="text-xs text-slate-500">អាសយដ្ឋាន</p>
-                                <p className="text-sm text-slate-700">{selectedSupplier.address}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-2 md:col-span-2">
-                              <MdEmail className="text-teal-500 mt-0.5" size={14} />
-                              <div>
-                                <p className="text-xs text-slate-500">អ៊ីមែល</p>
-                                <p className="text-sm text-slate-700">{selectedSupplier.email || "—"}</p>
-                              </div>
+                          </div>
+                          <div className="flex items-start gap-2 md:col-span-2">
+                            <MdEmail className="text-teal-500 mt-0.5" size={14} />
+                            <div>
+                              <p className="text-xs text-slate-500">អ៊ីមែល</p>
+                              <p className="text-sm text-slate-700">{selectedSupplier.email || "—"}</p>
                             </div>
                           </div>
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -579,7 +630,7 @@ const AddPurchaseItem = () => {
                           <option value="">ជ្រើសរើសឃ្លាំង</option>
                           {warehouses.map(warehouse => (
                             <option key={warehouse.id} value={warehouse.id}>
-                              {warehouse.name} - {warehouse.location}
+                              {warehouse.name} {warehouse.location ? `- ${warehouse.location}` : ''}
                             </option>
                           ))}
                         </select>
@@ -678,18 +729,13 @@ const AddPurchaseItem = () => {
                           <span className="text-slate-500">ទឹកប្រាក់សរុប: {formatCurrency(formData.grand_total)}</span>
                           <span className="text-orange-600">នៅសល់បង់: {formatCurrency(getRemainingAmount())}</span>
                         </div>
-                        {formData.paid_amount > formData.grand_total && (
-                          <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                            <MdInfoOutline size={12} /> ចំនួនទឹកប្រាក់ដែលបានបង់មិនអាចលើសពីចំនួនសរុបបានទេ
-                          </p>
-                        )}
                       </div>
                     )}
                   </div>
                 </div>
               </div>
               
-              {/* Products Table Card with Barcode */}
+              {/* Products Table Card */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                 <div className="px-6 py-4 bg-gradient-to-r from-teal-50/50 to-white border-b border-slate-100 flex justify-between items-center flex-wrap gap-3">
                   <div className="flex items-center gap-2">
@@ -711,8 +757,8 @@ const AddPurchaseItem = () => {
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         <th className="px-4 py-3">#</th>
-                        <th className="px-4 py-3">លេខកូដ/Barcode <span className="text-red-500">*</span></th>
-                        <th className="px-4 py-3">ឈ្មោះផលិតផល</th>
+                        <th className="px-4 py-3">ស្វែងរកផលិតផល <span className="text-red-500">*</span></th>
+                        <th className="px-4 py-3">លេខកូដ</th>
                         <th className="px-4 py-3">Barcode</th>
                         <th className="px-4 py-3">បរិមាណ</th>
                         <th className="px-4 py-3">តម្លៃដើម ($)</th>
@@ -726,30 +772,57 @@ const AddPurchaseItem = () => {
                       {items.map((item, index) => (
                         <tr key={index} className="hover:bg-slate-50/50 transition-colors group">
                           <td className="px-4 py-3 text-slate-500 text-sm">{index + 1}</td>
-                          <td className="px-4 py-3">
-                            <input
-                              type="text"
-                              value={item.product_code || item.product_id}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                const updatedItems = [...items];
-                                updatedItems[index].product_code = val;
-                                setItems(updatedItems);
-                              }}
-                              onBlur={(e) => handleProductIdBlur(index, e.target.value)}
-                              className="w-40 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-sm"
-                              placeholder="បញ្ចូលកូដ ឬ Barcode"
-                            />
-                           </td>
-                          <td className="px-4 py-3">
-                            <div className="min-w-[150px]">
-                              {item.product_name ? (
-                                <p className="text-sm text-slate-800 font-medium">{item.product_name}</p>
-                              ) : (
-                                <p className="text-xs text-slate-400">—</p>
+                          <td className="px-4 py-3 relative">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={productSearchTerms[index] || ""}
+                                onChange={(e) => handleProductSearchChange(index, e.target.value)}
+                                onFocus={() => setShowProductDropdowns({ ...showProductDropdowns, [index]: true })}
+                                className="w-64 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-sm bg-white"
+                                placeholder="បញ្ចូលឈ្មោះ កូដ ឬ Barcode..."
+                                autoComplete="off"
+                              />
+                              {showProductDropdowns[index] && productSearchTerms[index] && (
+                                <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                  {loadingProducts ? (
+                                    <div className="p-3 text-center text-slate-400 text-sm">កំពុងផ្ទុក...</div>
+                                  ) : getFilteredProducts(productSearchTerms[index]).length > 0 ? (
+                                    getFilteredProducts(productSearchTerms[index]).map(product => (
+                                      <div
+                                        key={product.id}
+                                        onClick={() => handleProductSelect(index, product)}
+                                        className="p-2 hover:bg-teal-50 cursor-pointer border-b border-slate-100 last:border-0"
+                                      >
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <p className="font-medium text-slate-800 text-sm">{product.name}</p>
+                                            <div className="flex gap-2 text-xs text-slate-500 mt-0.5">
+                                              <span>កូដ: {product.product_code}</span>
+                                              {product.barcode && <span>Barcode: {product.barcode}</span>}
+                                            </div>
+                                          </div>
+                                          <p className="text-teal-600 font-medium text-sm">
+                                            ${safeParseNumber(product.cost).toFixed(2)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="p-3 text-center text-slate-400 text-sm">រកមិនឃើញផលិតផល</div>
+                                  )}
+                                </div>
                               )}
                             </div>
-                           </td>
+                            {item.product_name && (
+                              <div className="text-xs text-slate-500 mt-1 truncate max-w-[250px]">
+                                {item.product_name}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-slate-600">{item.product_code || "—"}</span>
+                          </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1">
                               {item.barcode ? (
@@ -761,7 +834,7 @@ const AddPurchaseItem = () => {
                                 <span className="text-xs text-slate-400">—</span>
                               )}
                             </div>
-                           </td>
+                          </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1">
                               <button
@@ -786,7 +859,7 @@ const AddPurchaseItem = () => {
                                 <FaPlusCircle size={14} />
                               </button>
                             </div>
-                           </td>
+                          </td>
                           <td className="px-4 py-3">
                             <input
                               type="number"
@@ -796,7 +869,7 @@ const AddPurchaseItem = () => {
                               step="0.01"
                               placeholder="0.00"
                             />
-                           </td>
+                          </td>
                           <td className="px-4 py-3">
                             <input
                               type="number"
@@ -806,7 +879,7 @@ const AddPurchaseItem = () => {
                               step="0.1"
                               placeholder="0"
                             />
-                           </td>
+                          </td>
                           <td className="px-4 py-3">
                             <input
                               type="number"
@@ -816,10 +889,10 @@ const AddPurchaseItem = () => {
                               step="0.1"
                               placeholder="0"
                             />
-                           </td>
+                          </td>
                           <td className="px-4 py-3 font-semibold text-teal-600">
-                            ${item.line_total.toFixed(2)}
-                           </td>
+                            ${safeParseNumber(item.line_total).toFixed(2)}
+                          </td>
                           <td className="px-4 py-3 text-center">
                             <button
                               type="button"
@@ -829,15 +902,15 @@ const AddPurchaseItem = () => {
                             >
                               <MdDelete size={18} />
                             </button>
-                           </td>
-                         </tr>
+                          </td>
+                        </tr>
                       ))}
                     </tbody>
-                   </table>
+                  </table>
                 </div>
                 <div className="p-3 text-xs text-slate-400 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
                   <MdOutlineVerified size={14} className="text-teal-500" />
-                  បញ្ចូលលេខកូដផលិតផល ឬ Barcode ព័ត៌មានផ្សេងៗនឹងត្រូវបំពេញដោយស្វ័យប្រវត្តិ
+                  បញ្ចូលឈ្មោះផលិតផល លេខកូដ ឬ Barcode ព័ត៌មានផ្សេងៗនឹងត្រូវបំពេញដោយស្វ័យប្រវត្តិ
                 </div>
               </div>
               
@@ -904,17 +977,21 @@ const AddPurchaseItem = () => {
                 <div className="p-6 bg-slate-50 border-t border-slate-200 flex flex-col gap-3">
                   <button
                     type="submit"
-                    disabled={loadingSave}
-                    className={`w-full py-3 bg-teal-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${loadingSave ? 'opacity-75 cursor-not-allowed' : 'hover:bg-teal-700 hover:shadow-lg'}`}
+                    disabled={savingPurchase}
+                    className={`w-full py-3 bg-teal-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${savingPurchase ? 'opacity-75 cursor-not-allowed' : 'hover:bg-teal-700 hover:shadow-lg'}`}
                   >
-                    {loadingSave ? (
+                    {savingPurchase ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <MdSave size={18} />
                     )}
-                    {loadingSave ? 'កំពុងរក្សាទុក...' : 'រក្សាទុកលំដាប់ទិញ'}
+                    {savingPurchase ? 'កំពុងរក្សាទុក...' : 'រក្សាទុកលំដាប់ទិញ'}
                   </button>
-                  <button type="button" className="w-full py-3 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                  <button 
+                    type="button" 
+                    onClick={resetForm}
+                    className="w-full py-3 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                  >
                     <MdCancel size={18} /> បោះបង់
                   </button>
                 </div>

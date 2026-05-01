@@ -94,13 +94,20 @@ export const getUnits = async () => {
 export const addUnit = async (data) => {
   return await api.post("/api/units", data);
 };
-export const getSuppliers = async () => {
-  return await api.get("/api/suppliers");
-};
 export const addSupplier = async (data) => {
   return await api.post("/api/suppliers", data);
 };
-
+// export const getSuppliers = async () => {
+//   return await api.get("/api/suppliers");
+// };
+// export const searchSuppliers = async (keyword) => {
+//   return await api.get("/api/suppliers", {
+//     params: { search: keyword }
+//   });
+// };
+export const getSuppliers = async (params = {}) => {
+  return await api.get("/api/suppliers", { params });
+};
 
 
 

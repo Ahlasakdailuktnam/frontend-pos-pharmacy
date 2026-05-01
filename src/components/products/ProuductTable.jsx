@@ -179,7 +179,7 @@ const ProductTable = ({ products = [], onDelete }) => {
                         </Link>
 
                         <button
-                          onClick={() => onDelete(product)}
+                          onClick={() => onDelete(product.id)}
                           className="p-1 text-gray-400 hover:text-red-600"
                         >
                           <MdDelete size={18} />

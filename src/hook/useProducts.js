@@ -1,19 +1,21 @@
 // src/hooks/useProducts.js
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getProducts,
   deleteProductById,
+  getCategories,
 } from "../services/auth";
 
 const useProducts = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
+const [category, setCategory] = useState("all");
 
   // ===============================
   // Fetch Products
@@ -22,21 +24,57 @@ const useProducts = () => {
     try {
       setLoading(true);
 
-      const res = await getProducts();
+      const res = await getProducts({
+        search,
+        category,
+      });
 
-      const rows = res?.data || res || [];
+      const rows = res?.data || [];
+
 
       setProducts(Array.isArray(rows) ? rows : []);
     } catch (error) {
-      console.error("Fetch Products Error:", error);
+      console.error(
+        "Fetch Products Error:",
+        error.response || error
+      );
       setProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // ===============================
+  // Fetch Categories
+  // ===============================
+  const fetchCategories = async () => {
+    try {
+      const res = await getCategories();
+
+      const rows = res?.data?.data || [];
+
+      setCategories(Array.isArray(rows) ? rows : []);
+    } catch (error) {
+      console.error(
+        "Fetch Categories Error:",
+        error.response || error
+      );
+      setCategories([]);
+    }
+  };
+
+  // ===============================
+  // Auto Fetch Products
+  // ===============================
   useEffect(() => {
     fetchProducts();
+  }, [search, category]);
+
+  // ===============================
+  // First Load Categories
+  // ===============================
+  useEffect(() => {
+    fetchCategories();
   }, []);
 
   // ===============================
@@ -48,72 +86,27 @@ const useProducts = () => {
 
       await deleteProductById(id);
 
+      // Update UI instantly
       setProducts((prev) =>
         prev.filter((item) => item.id !== id)
       );
 
       return true;
     } catch (error) {
-      console.error("Delete Product Error:", error);
+      console.error(
+        "Delete Product Error:",
+        error.response || error
+      );
       return false;
     } finally {
       setDeleting(false);
     }
   };
 
-  // ===============================
-  // Categories
-  // ===============================
-  const categories = useMemo(() => {
-    const list = products.map(
-      (item) =>
-        item.category?.name ||
-        item.category_name ||
-        item.category ||
-        "Unknown"
-    );
-
-    return ["all", ...new Set(list)];
-  }, [products]);
-
-  // ===============================
-  // Filter Products
-  // ===============================
-  const filteredProducts = useMemo(() => {
-    return products.filter((item) => {
-      const name = (
-        item.name ||
-        ""
-      ).toLowerCase();
-
-      const nameEn = (
-        item.name_en ||
-        item.nameEn ||
-        ""
-      ).toLowerCase();
-
-      const keyword = search.toLowerCase();
-
-      const itemCategory =
-        item.category?.name ||
-        item.category_name ||
-        item.category ||
-        "Unknown";
-
-      const matchSearch =
-        name.includes(keyword) ||
-        nameEn.includes(keyword);
-
-      const matchCategory =
-        category === "all" ||
-        itemCategory === category;
-
-      return matchSearch && matchCategory;
-    });
-  }, [products, search, category]);
-
   return {
-    products: filteredProducts,
+    products,
+    categories,
+
     loading,
     deleting,
 
@@ -122,8 +115,6 @@ const useProducts = () => {
 
     category,
     setCategory,
-
-    categories,
 
     fetchProducts,
     deleteProduct,
