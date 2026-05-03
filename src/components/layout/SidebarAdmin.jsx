@@ -6,7 +6,7 @@ import {
   IoPersonAddOutline,
   IoLogOutOutline,
 } from "react-icons/io5";
-import { FaChartArea, FaUserCheck,  FaWarehouse } from "react-icons/fa";
+import { FaChartArea, FaUserCheck, FaWarehouse } from "react-icons/fa";
 import {
   MdKeyboardArrowRight,
   MdKeyboardArrowDown,
@@ -15,7 +15,11 @@ import {
 import { BsHouseAddFill } from "react-icons/bs";
 
 import { LiaClipboardListSolid } from "react-icons/lia";
-import { TbTruckDelivery, TbReportMedical,  TbFileInvoiceFilled } from "react-icons/tb";
+import {
+  TbTruckDelivery,
+  TbReportMedical,
+  TbFileInvoiceFilled,
+} from "react-icons/tb";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import Supplier from "../../pages/Admins/Supplier/Supplier";
@@ -27,7 +31,7 @@ const Sidebar = () => {
     inventory: false,
     staff: false,
     supplier: false,
-    warehouse:false,
+    warehouse: false,
   });
   const location = useLocation();
 
@@ -130,7 +134,7 @@ const Sidebar = () => {
                     បន្ថែមថ្នាំថ្មី
                   </div>
                 </Link>
-              
+
                 <Link to="/admin/inventory/addType">
                   <div
                     className={`p-2 rounded-lg gap-2  flex items-center  cursor-pointer ${
@@ -287,7 +291,6 @@ const Sidebar = () => {
                   </div>
                 </Link>
 
-               
                 <Link to="/admin/supplier/add">
                   <div
                     className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
@@ -300,16 +303,16 @@ const Sidebar = () => {
                     បន្ថែមអ្នកនាំចូល
                   </div>
                 </Link>
-                 <Link to="/admin/supplier/receipt">
+                <Link to="/admin/supplier/all-payments">
                   <div
                     className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
-                      location.pathname === "/admin/supplier/receipt"
+                      location.pathname === "/admin/supplier/all-payments"
                         ? "bg-blue-100 text-[#0D9488]"
                         : "hover:bg-gray-100"
                     }`}
                   >
                     <TbFileInvoiceFilled />
-                    វិក្កយប័ត្រទំនិញនាំចូលទាំងអស់
+                    ប្រវត្តិបង់ប្រាក់{" "}
                   </div>
                 </Link>
                 <Link to="/admin/supplier/add-sup-invoice">
@@ -324,12 +327,9 @@ const Sidebar = () => {
                     បន្ថែមវិក្ក័យបត្រទំនិញនាំចូល
                   </div>
                 </Link>
-               
               </div>
             )}
           </div>
-
-
 
           <div>
             {/* MAIN MENU */}
@@ -367,7 +367,7 @@ const Sidebar = () => {
             {openMenu.warehouse && (
               <div className="ml-8 mt-1 flex flex-col gap-1">
                 {/* All Products */}
-                
+
                 {/* Add Product */}
                 <Link to="/admin/warehouse/add">
                   <div
@@ -381,8 +381,6 @@ const Sidebar = () => {
                     បន្ថែមទីតាំងថ្មី
                   </div>
                 </Link>
-               
-               
               </div>
             )}
           </div>
@@ -400,7 +398,7 @@ const Sidebar = () => {
               <p>ការចំណាយផ្សេងៗ</p>
             </div>
           </Link>
-          
+
           <Link to="/admin/report">
             <div
               className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer ${

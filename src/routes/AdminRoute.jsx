@@ -24,7 +24,8 @@ import WarehouseList from "../pages/Admins/warehouse/WareHouseList";
 import AddWarehouse from "../pages/Admins/warehouse/AddWarehouse";
 import EditWarehouse from "../pages/Admins/warehouse/EditWarehouse";
 import PurchaseInvoiceManagement from "../pages/Admins/Supplier/PurchaseInvoiceManagement";
-
+import PurchasePaymentManagement from "../pages/Admins/Supplier/PurchasePaymentManagement";
+import AllPaymentsList from "../pages/Admins/Supplier/AllPaymentsList";
 const AdminRoute = () => {
   return (
     <div className="grid grid-cols-[298px_1fr] h-screen bg-gray-100">
@@ -46,13 +47,28 @@ const AdminRoute = () => {
             <Route path="staff/attendance" element={<Attendance />} />
             <Route path="supplier" element={<Supplier />} />
             <Route path="supplier/add" element={<AddSupplier />} />
-            <Route path="supplier/add-sup-invoice" element={<AddPurchaseItem />} />
+            <Route
+              path="supplier/add-sup-invoice"
+              element={<AddPurchaseItem />}
+            />
             <Route path="supplier/details" element={<SupplierDetail />} />
-            <Route path="supplier/purchase-receipt/:id" element={<ReceiptPage/>}/>
-            <Route path="supplier/list" element={<PurchaseInvoiceManagement/>}/>
-            <Route path="warehouse" element={<WarehouseList/>}/>
-            <Route path="warehouse/add" element={<AddWarehouse/>}/>
-             <Route path="warehouse/edit/:id" element={<EditWarehouse/>} />
+            <Route
+              path="supplier/purchase-receipt/:id"
+              element={<ReceiptPage />}
+            />
+            <Route
+              path="supplier/purchase-payments/:id"
+              element={<PurchasePaymentManagement />}
+            />
+            <Route
+              path="supplier/list"
+              element={<PurchaseInvoiceManagement />}
+            />
+            <Route path="supplier/all-payments" element={<AllPaymentsList />} />
+
+            <Route path="warehouse" element={<WarehouseList />} />
+            <Route path="warehouse/add" element={<AddWarehouse />} />
+            <Route path="warehouse/edit/:id" element={<EditWarehouse />} />
             <Route path="customer" element={<Customer />} />
             <Route path="expence" element={<Expence />} />
             <Route path="report" element={<ReportAdmin />} />

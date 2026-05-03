@@ -154,3 +154,35 @@ export const getPurchaseById = async (id) => {
   const res = await api.get(`/api/purchases/${id}`);
   return res.data;
 };
+
+
+
+
+
+
+
+
+
+
+export const getPurchasePayments = async (purchaseId) => {
+  const res = await api.get(`/api/purchases/${purchaseId}/payments`);
+  return res.data;
+};
+
+export const addPurchasePayment = async (purchaseId, paymentData) => {
+  const res = await api.post(`/api/purchases/${purchaseId}/payments`, paymentData);
+  return res.data;
+};
+
+export const deletePurchasePayment = async (purchaseId, paymentId) => {
+  const res = await api.delete(`/api/purchases/${purchaseId}/payments/${paymentId}`);
+  return res.data;
+};
+export const getPendingPurchases = async () => {
+  const res = await api.get("/api/purchases/pending");
+  return res.data;
+};
+export const getAllPayments = async () => {
+  const res = await api.get("/api/purchase-payments");
+  return res.data;
+};
