@@ -8,19 +8,24 @@ import CheckoutSuccess from "../pages/Staff/CheckoutSucess";
 
 const StaffRoute = () => {
   return (
-    <div className="grid grid-cols-[298px_1fr] h-screen bg-[#F8FAFC]">
-      <Sidebar />
+    <div className="h-screen flex flex-col bg-[#F8FAFC]">
 
-      <div className="flex flex-col">
-        <Navbar />
+  <Navbar />
 
-        <Routes>
-          <Route path="/" element={<HomePos />} />
-          <Route path="customer" element={<InvoiceHistory />} />
-          <Route path="check" element={<CheckoutSuccess />} />
-        </Routes>
-      </div>
+  <div className="flex flex-1 overflow-hidden">
+
+    <Sidebar />
+    <div className="flex-1 overflow-hidden">
+      <Routes>
+        <Route path="/" element={<HomePos />} />
+        <Route path="customer" element={<InvoiceHistory />} />
+        <Route path="check" element={<CheckoutSuccess />} />
+      </Routes>
     </div>
+
+  </div>
+
+</div>
   );
 };
 

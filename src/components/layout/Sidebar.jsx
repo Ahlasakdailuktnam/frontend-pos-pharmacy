@@ -28,15 +28,6 @@ const Sidebar = () => {
   return (
     <div>
       <div className="flex bg-white flex-col h-screen px-5 py-7 border-r border-gray-200">
-
-        {/* Logo */}
-        <div className="mb-8 flex items-center gap-2">
-          <img className="w-13 h-13" src={logo} alt="logo" />
-          <p className="text-[#0D9488] font-bold text-lg leading-snug">
-            ឱសថស្ថាន អាឡាត្រឡោកបែក
-          </p>
-        </div>
-
         {/* User Info */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 flex items-center justify-center bg-blue-100 text-[#0D9488] rounded-lg font-semibold">

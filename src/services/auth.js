@@ -108,7 +108,26 @@ export const addSupplier = async (data) => {
 export const getSuppliers = async (params = {}) => {
   return await api.get("/api/suppliers", { params });
 };
+// Add this to your auth.js file
 
+export const getSupplierDashboard = async (year, month) => {
+  const res = await api.get("/api/suppliers/dashboard", {
+    params: { year, month }
+  });
+  return res.data;
+};
+
+
+// Add to src/services/auth.js
+export const createSale = async (data) => {
+  const res = await api.post("/api/sales", data);
+  return res.data;
+};
+
+export const getSales = async () => {
+  const res = await api.get("/api/sales");
+  return res.data;
+};
 
 
 
