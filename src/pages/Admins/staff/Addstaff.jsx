@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   MdPerson,
   MdEmail,
@@ -23,94 +23,48 @@ import {
   MdEmergency,
 } from "react-icons/md";
 import {
-  FaUserMd,
-  FaUserTie,
-  FaUserGraduate,
-  FaUserClock,
   FaMoneyBillWave,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import usePositions from "../../../hook/position/usePositon";
+import useStaff from "../../../hook/staff/useStaff";
 
 const Addstaff = () => {
+  const navigate = useNavigate();
+  const { positions, loading: positionsLoading } = usePositions();
+  const { addStaff, loading: staffLoading } = useStaff();
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [previewAvatar, setPreviewAvatar] = useState(null);
 
   // Form Data
   const [formData, setFormData] = useState({
-    // Personal Information (Step 1)
     firstName: "",
+    lastName: "",
     email: "",
     dateOfBirth: "",
     phone: "",
     idCard: "",
-    
-    // These fields are for Step 2 and beyond
-    lastName: "",
     gender: "",
-    bloodType: "",
-    nationality: "កម្ពុជា",
-    maritalStatus: "",
-    emergencyPhone: "",
     address: "",
     city: "ភ្នំពេញ",
-    position: "",
-    department: "",
-    employeeId: "",
-    joinDate: new Date().toISOString().split("T")[0],
-    shift: "ព្រឹក",
-    contractType: "ពេញម៉ោង",
-    baseSalary: "",
-    allowance: "",
-    bonus: "",
-    bankAccount: "",
-    bankName: "ABA Bank",
-    education: "",
-    experience: "",
-    skills: "",
-    certificates: "",
-    profileImage: null,
-    cv: null,
-    certificateFiles: [],
     emergencyName: "",
     emergencyRelation: "",
-    emergencyPhone2: "",
-    notes: "",
-    status: "active",
+    emergencyPhone: "",
+    position_id: "",
+    employeeId: "",
+    contractDuration: "",
+    contractType: "ពេញម៉ោង",
+    joinDate: new Date().toISOString().split("T")[0],
+    baseSalary: "",
+    allowance: "",
+    profileImage: null,
+    cv: null,
   });
 
   const [errors, setErrors] = useState({});
-
-  // Department options
-  const departments = [
-    "ឱសថ",
-    "សេវាកម្មអតិថិជន",
-    "រដ្ឋបាល",
-    "ហិរញ្ញវត្ថុ",
-    "ទីផ្សារ",
-  ];
-  const typework = [
-    "បុគ្គលិកពេញម៉ោង",
-    "និស្សិតហាត់ការងារ",
-    "បុគ្គលិកកិច្ចសន្យា",
-    "បុគ្គលិកក្រៅម៉ោង",
-  ];
-
-  // Position options by department
-  const positions = {
-    ឱសថ: ["ឱសថការី", "ឱសថការីរង", "ជំនួយការឱសថការី"],
-    សេវាកម្មអតិថិជន: ["អ្នកលក់", "អ្នកទទួលភ្ញៀវ", "អ្នកផ្តល់ប្រឹក្សា"],
-    រដ្ឋបាល: ["អ្នកគ្រប់គ្រង", "បុគ្គលិករដ្ឋបាល", "ជំនួយការរដ្ឋបាល"],
-    ហិរញ្ញវត្ថុ: ["គណនេយ្យករ", "អ្នកគិតលុយ", "ហិរញ្ញវត្ថុ"],
-    ទីផ្សារ: ["អ្នកទីផ្សារ", "អ្នករចនា", "អ្នកថតរូប"],
-  };
-
-  // Shift options
-  const shifts = [
-    "ព្រឹក (7:00 - 12:00)",
-    "រសៀល (13:00 - 17:00)",
-    "យប់ (18:00 - 21:00)",
-    "បង្វិល",
-  ];
 
   // Handle input change
   const handleChange = (e) => {
@@ -140,6 +94,7 @@ const Addstaff = () => {
 
     if (currentStep === 1) {
       if (!formData.firstName) newErrors.firstName = "សូមបញ្ចូលឈ្មោះ";
+      if (!formData.lastName) newErrors.lastName = "សូមបញ្ចូលនាមត្រកូល";
       if (!formData.email) newErrors.email = "សូមបញ្ចូលអ៊ីមែល";
       if (!formData.dateOfBirth) newErrors.dateOfBirth = "សូមបញ្ចូលថ្ងៃខែឆ្នាំកំណើត";
       if (!formData.phone) newErrors.phone = "សូមបញ្ចូលលេខទូរស័ព្ទ";
@@ -147,14 +102,12 @@ const Addstaff = () => {
     }
 
     if (currentStep === 2) {
-      if (!formData.lastName) newErrors.lastName = "សូមបញ្ចូលនាមត្រកូល";
       if (!formData.gender) newErrors.gender = "សូមជ្រើសរើសភេទ";
       if (!formData.address) newErrors.address = "សូមបញ្ចូលអាសយដ្ឋាន";
     }
 
     if (currentStep === 3) {
-      if (!formData.position) newErrors.position = "សូមជ្រើសរើសមុខតំណែង";
-      if (!formData.department) newErrors.department = "សូមជ្រើសរើសនាយកដ្ឋាន";
+      if (!formData.position_id) newErrors.position_id = "សូមជ្រើសរើសមុខតំណែង";
       if (!formData.employeeId) newErrors.employeeId = "សូមបញ្ចូលលេខបុគ្គលិក";
     }
 
@@ -178,15 +131,48 @@ const Addstaff = () => {
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateStep()) {
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (validateStep()) {
+    setErrorMessage("");
+    
+    // Don't use FormData, use plain object
+    const staffData = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      date_of_birth: formData.dateOfBirth,
+      phone: formData.phone,
+      id_card: formData.idCard,
+      gender: formData.gender,
+      address: formData.address,
+      position_id: parseInt(formData.position_id),
+      employee_id: formData.employeeId,
+      base_salary: parseFloat(formData.baseSalary),
+      allowance: parseFloat(formData.allowance || 0),
+      contract_duration: formData.contractDuration || "",
+      work_type: formData.contractType,
+      join_date: formData.joinDate,
+      emergency_name: formData.emergencyName || "",
+      emergency_phone: formData.emergencyPhone || "",
+    };
+    
+    console.log("Sending data:", staffData);
+
+    const result = await addStaff(staffData);
+    
+    if (result.success) {
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
-      }, 3000);
+        navigate("/admin/staff");
+      }, 2000);
+    } else {
+      setErrorMessage(result.message);
+      console.error("Error response:", result);
     }
-  };
+  }
+};
 
   const steps = [
     { number: 1, title: "ព័ត៌មានផ្ទាល់ខ្លួន", icon: MdPerson },
@@ -196,22 +182,29 @@ const Addstaff = () => {
     { number: 5, title: "ឯកសារ", icon: MdCloudUpload },
   ];
 
+  if (positionsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">កំពុងផ្ទុកទិន្នន័យ...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm">
         <div className="px-6 py-4">
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
               <MdArrowBack size={20} className="text-gray-600" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                បន្ថែមបុគ្គលិកថ្មី
-              </h1>
-              <p className="text-gray-500 text-sm mt-0.5">
-                បញ្ចូលព័ត៌មានបុគ្គលិកថ្មីក្នុងប្រព័ន្ធ
-              </p>
+              <h1 className="text-2xl font-bold text-gray-800">បន្ថែមបុគ្គលិកថ្មី</h1>
+              <p className="text-gray-500 text-sm mt-0.5">បញ្ចូលព័ត៌មានបុគ្គលិកថ្មីក្នុងប្រព័ន្ធ</p>
             </div>
           </div>
         </div>
@@ -243,18 +236,14 @@ const Addstaff = () => {
                         <Icon size={22} />
                       )}
                     </div>
-                    <p
-                      className={`text-xs mt-2 text-center font-medium ${isActive ? "text-teal-600" : "text-gray-500"}`}
-                    >
+                    <p className={`text-xs mt-2 text-center font-medium ${isActive ? "text-teal-600" : "text-gray-500"}`}>
                       {step.title}
                     </p>
                   </div>
                   {index < steps.length - 1 && (
                     <div
                       className={`absolute top-6 left-[calc(50%+24px)] w-[calc(100%-48px)] h-0.5 ${
-                        currentStep > step.number
-                          ? "bg-green-500"
-                          : "bg-gray-200"
+                        currentStep > step.number ? "bg-green-500" : "bg-gray-200"
                       }`}
                     />
                   )}
@@ -270,14 +259,17 @@ const Addstaff = () => {
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 shadow-lg">
               <MdCheckCircle className="text-green-600 text-2xl" />
               <div>
-                <p className="font-semibold text-green-800">
-                  បញ្ចូលទិន្នន័យជោគជ័យ!
-                </p>
-                <p className="text-sm text-green-600">
-                  បុគ្គលិកត្រូវបានបន្ថែមក្នុងប្រព័ន្ធ
-                </p>
+                <p className="font-semibold text-green-800">បញ្ចូលទិន្នន័យជោគជ័យ!</p>
+                <p className="text-sm text-green-600">បុគ្គលិកត្រូវបានបន្ថែមក្នុងប្រព័ន្ធ</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4">
+            <p className="text-red-600">{errorMessage}</p>
           </div>
         )}
 
@@ -312,19 +304,17 @@ const Addstaff = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-800">រូបថតបុគ្គលិក</h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    ទ្រង់ទ្រាយ JPG, PNG ទំហំមិនលើស 5MB
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">ទ្រង់ទ្រាយ JPG, PNG ទំហំមិនលើស 5MB</p>
                 </div>
               </div>
             </div>
 
-            {/* Step 1: Personal Information - ONLY the fields you want */}
+            {/* Step 1: Personal Information */}
             {currentStep === 1 && (
               <div className="p-6 space-y-6">
                 <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                   <MdPerson className="text-teal-600" />
-                  ព័ត៌មានផ្ទាល់ខ្លួនសម្រាប់បង្កើតអាខោន
+                  ព័ត៌មានផ្ទាល់ខ្លួន
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
@@ -336,12 +326,25 @@ const Addstaff = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2.5 border ${errors.firstName ? "border-red-500" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all`}
+                      className={`w-full px-4 py-2.5 border ${errors.firstName ? "border-red-500" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20`}
                       placeholder="បញ្ចូលឈ្មោះ"
                     />
-                    {errors.firstName && (
-                      <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>
-                    )}
+                    {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      នាមត្រកូល <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2.5 border ${errors.lastName ? "border-red-500" : "border-gray-200"} rounded-xl`}
+                      placeholder="បញ្ចូលនាមត្រកូល"
+                    />
+                    {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
                   </div>
 
                   <div>
@@ -353,12 +356,10 @@ const Addstaff = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2.5 border ${errors.email ? "border-red-500" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500`}
+                      className={`w-full px-4 py-2.5 border ${errors.email ? "border-red-500" : "border-gray-200"} rounded-xl`}
                       placeholder="example@email.com"
                     />
-                    {errors.email && (
-                      <p className="text-xs text-red-500 mt-1">{errors.email}</p>
-                    )}
+                    {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                   </div>
 
                   <div>
@@ -370,11 +371,9 @@ const Addstaff = () => {
                       name="dateOfBirth"
                       value={formData.dateOfBirth}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2.5 border ${errors.dateOfBirth ? "border-red-500" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500`}
+                      className={`w-full px-4 py-2.5 border ${errors.dateOfBirth ? "border-red-500" : "border-gray-200"} rounded-xl`}
                     />
-                    {errors.dateOfBirth && (
-                      <p className="text-xs text-red-500 mt-1">{errors.dateOfBirth}</p>
-                    )}
+                    {errors.dateOfBirth && <p className="text-xs text-red-500 mt-1">{errors.dateOfBirth}</p>}
                   </div>
 
                   <div>
@@ -386,35 +385,31 @@ const Addstaff = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2.5 border ${errors.phone ? "border-red-500" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500`}
+                      className={`w-full px-4 py-2.5 border ${errors.phone ? "border-red-500" : "border-gray-200"} rounded-xl`}
                       placeholder="012 345 678"
                     />
-                    {errors.phone && (
-                      <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
-                    )}
+                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      លេខអត្តសញ្ញាណប័ណ្ណសម្រាប់បង្កើតអាខោន <span className="text-red-500">*</span>
+                      លេខអត្តសញ្ញាណប័ណ្ណ <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="idCard"
                       value={formData.idCard}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2.5 border ${errors.idCard ? "border-red-500" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500`}
+                      className={`w-full px-4 py-2.5 border ${errors.idCard ? "border-red-500" : "border-gray-200"} rounded-xl`}
                       placeholder="បញ្ចូលលេខអត្តសញ្ញាណប័ណ្ណ"
                     />
-                    {errors.idCard && (
-                      <p className="text-xs text-red-500 mt-1">{errors.idCard}</p>
-                    )}
+                    {errors.idCard && <p className="text-xs text-red-500 mt-1">{errors.idCard}</p>}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Step 2: Contact Information (includes lastName, gender, address, etc.) */}
+            {/* Step 2: Contact Information */}
             {currentStep === 2 && (
               <div className="p-6 space-y-6">
                 <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
@@ -424,29 +419,14 @@ const Addstaff = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      នាមត្រកូល <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      className={`w-full px-4 py-2.5 border ${errors.lastName ? "border-red-500" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20`}
-                      placeholder="បញ្ចូលនាមត្រកូល"
-                    />
-                    {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       ភេទ <span className="text-red-500">*</span>
                     </label>
                     <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
+                      <label className="flex items-center gap-2">
                         <input type="radio" name="gender" value="ប្រុស" checked={formData.gender === "ប្រុស"} onChange={handleChange} className="w-4 h-4 text-teal-600" />
                         <span className="text-gray-700">ប្រុស</span>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
+                      <label className="flex items-center gap-2">
                         <input type="radio" name="gender" value="ស្រី" checked={formData.gender === "ស្រី"} onChange={handleChange} className="w-4 h-4 text-teal-600" />
                         <span className="text-gray-700">ស្រី</span>
                       </label>
@@ -455,16 +435,7 @@ const Addstaff = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ទូរស័ព្ទបន្ទាន់
-                    </label>
-                    <input type="tel" name="emergencyPhone" value={formData.emergencyPhone} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl" placeholder="098 765 432" />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ទីក្រុង/ខេត្ត
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ទីក្រុង/ខេត្ត</label>
                     <select name="city" value={formData.city} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
                       <option value="ភ្នំពេញ">ភ្នំពេញ</option>
                       <option value="សៀមរាប">សៀមរាប</option>
@@ -476,12 +447,11 @@ const Addstaff = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       អាសយដ្ឋាន <span className="text-red-500">*</span>
                     </label>
-                    <textarea name="address" value={formData.address} onChange={handleChange} rows="3" className={`w-full px-4 py-2.5 border ${errors.address ? "border-red-500" : "border-gray-200"} rounded-xl`} placeholder="បញ្ចូលអាសយដ្ឋានលម្អិត" />
+                    <textarea name="address" value={formData.address} onChange={handleChange} rows="2" className={`w-full px-4 py-2.5 border ${errors.address ? "border-red-500" : "border-gray-200"} rounded-xl`} placeholder="បញ្ចូលអាសយដ្ឋានលម្អិត" />
                     {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
                   </div>
                 </div>
 
-                {/* Emergency Contact */}
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <h3 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
                     <MdEmergency className="text-teal-600" />
@@ -498,7 +468,7 @@ const Addstaff = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">លេខទូរស័ព្ទ</label>
-                      <input type="tel" name="emergencyPhone2" value={formData.emergencyPhone2} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl" placeholder="លេខទូរស័ព្ទ" />
+                      <input type="tel" name="emergencyPhone" value={formData.emergencyPhone} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl" placeholder="លេខទូរស័ព្ទ" />
                     </div>
                   </div>
                 </div>
@@ -514,42 +484,30 @@ const Addstaff = () => {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">លេខបុគ្គលិក <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      មុខតំណែង <span className="text-red-500">*</span>
+                    </label>
+                    <select name="position_id" value={formData.position_id} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
+                      <option value="">ជ្រើសរើសមុខតំណែង</option>
+                      {positions.map((pos) => (
+                        <option key={pos.id} value={pos.id}>{pos.name}</option>
+                      ))}
+                    </select>
+                    {errors.position_id && <p className="text-xs text-red-500 mt-1">{errors.position_id}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      លេខបុគ្គលិក <span className="text-red-500">*</span>
+                    </label>
                     <input type="text" name="employeeId" value={formData.employeeId} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl" placeholder="EMP-001" />
                     {errors.employeeId && <p className="text-xs text-red-500 mt-1">{errors.employeeId}</p>}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">កុងត្រារយ:ពេល <span className="text-red-500">*</span></label>
-                    <input type="text" name="employeeId" value={formData.employeeId} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl" placeholder="ឧទាហរណ៍​:1ឆ្នាំ" />
-                    {errors.employeeId && <p className="text-xs text-red-500 mt-1">{errors.employeeId}</p>}
-                  </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">នាយកដ្ឋាន <span className="text-red-500">*</span></label>
-                    <select name="department" value={formData.department} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
-                      <option value="">ជ្រើសរើសនាយកដ្ឋាន</option>
-                      {departments.map((dept) => <option key={dept} value={dept}>{dept}</option>)}
-                    </select>
-                    {errors.department && <p className="text-xs text-red-500 mt-1">{errors.department}</p>}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">រយៈពេលកុងត្រា</label>
+                    <input type="text" name="contractDuration" value={formData.contractDuration} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl" placeholder="ឧទាហរណ៍: 1ឆ្នាំ" />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">មុខតំណែង <span className="text-red-500">*</span></label>
-                    <select name="position" value={formData.position} onChange={handleChange} disabled={!formData.department} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
-                      <option value="">ជ្រើសរើសមុខតំណែង</option>
-                      {formData.department && positions[formData.department]?.map((pos) => <option key={pos} value={pos}>{pos}</option>)}
-                    </select>
-                    {errors.position && <p className="text-xs text-red-500 mt-1">{errors.position}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">ប្រភេទការងារ <span className="text-red-500">*</span></label>
-                    <select name="department" value={formData.department} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl">
-                      <option value="">ជ្រើសរើសប្រភេទការងារ</option>
-                      {typework.map((dept) => <option key={dept} value={dept}>{dept}</option>)}
-                    </select>
-                    {errors.department && <p className="text-xs text-red-500 mt-1">{errors.department}</p>}
-                  </div>
-
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">កាលបរិច្ឆេទចូលធ្វើការ</label>
@@ -568,7 +526,9 @@ const Addstaff = () => {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">ប្រាក់ខែគោល ($) <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      ប្រាក់ខែគោល ($) <span className="text-red-500">*</span>
+                    </label>
                     <input type="number" name="baseSalary" value={formData.baseSalary} onChange={handleChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl" placeholder="0.00" />
                     {errors.baseSalary && <p className="text-xs text-red-500 mt-1">{errors.baseSalary}</p>}
                   </div>
@@ -591,24 +551,39 @@ const Addstaff = () => {
                   <MdCloudUpload className="text-4xl text-gray-400 mx-auto mb-2" />
                   <p className="text-sm font-medium text-gray-700">បង្ហោះឯកសារ CV</p>
                   <input type="file" name="cv" accept=".pdf,.docx" onChange={handleChange} className="hidden" id="cv-upload" />
-                  <label htmlFor="cv-upload" className="inline-block mt-3 px-4 py-2 bg-teal-50 text-teal-600 rounded-lg text-sm cursor-pointer">ជ្រើសរើសឯកសារ</label>
+                  <label htmlFor="cv-upload" className="inline-block mt-3 px-4 py-2 bg-teal-50 text-teal-600 rounded-lg text-sm cursor-pointer hover:bg-teal-100 transition">
+                    ជ្រើសរើសឯកសារ
+                  </label>
+                  {formData.cv && <p className="text-xs text-green-600 mt-2">បានជ្រើសរើស: {formData.cv.name}</p>}
                 </div>
               </div>
             )}
 
             {/* Form Actions */}
             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-between">
-              <button type="button" onClick={prevStep} className={`px-6 py-2.5 rounded-xl flex items-center gap-2 ${currentStep === 1 ? "invisible" : "border border-gray-300 text-gray-700 hover:bg-gray-100"}`}>
+              <button
+                type="button"
+                onClick={prevStep}
+                className={`px-6 py-2.5 rounded-xl flex items-center gap-2 transition ${currentStep === 1 ? "invisible" : "border border-gray-300 text-gray-700 hover:bg-gray-100"}`}
+              >
                 <MdCancel size={18} /> ត្រឡប់ក្រោយ
               </button>
 
               {currentStep < 5 ? (
-                <button type="button" onClick={nextStep} className="px-6 py-2.5 bg-teal-600 text-white rounded-xl hover:bg-teal-700 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  className="px-6 py-2.5 bg-teal-600 text-white rounded-xl hover:bg-teal-700 flex items-center gap-2 transition"
+                >
                   បន្ទាប់ <MdArrowBack className="rotate-180" size={18} />
                 </button>
               ) : (
-                <button type="submit" className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 flex items-center gap-2">
-                  <MdSave size={18} /> រក្សាទុកបុគ្គលិក
+                <button
+                  type="submit"
+                  disabled={staffLoading}
+                  className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 flex items-center gap-2 transition disabled:opacity-50"
+                >
+                  <MdSave size={18} /> {staffLoading ? "កំពុងរក្សាទុក..." : "រក្សាទុកបុគ្គលិក"}
                 </button>
               )}
             </div>

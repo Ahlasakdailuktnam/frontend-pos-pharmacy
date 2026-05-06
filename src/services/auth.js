@@ -205,3 +205,182 @@ export const getAllPayments = async () => {
   const res = await api.get("/api/purchase-payments");
   return res.data;
 };
+
+
+
+export const createOrder = async (orderData) => {
+  const res = await api.post("/api/orders", orderData);
+  return res.data;
+};
+export const getProductDashboard = async () => {
+  const res = await api.get("/api/products/dashboard");
+  return res.data;
+};
+
+
+export const getCustomers = async (params = {}) => {
+  const res = await api.get("/api/customers", { params });
+  return res.data;
+};
+
+export const getCustomerById = async (id) => {
+  const res = await api.get(`/api/customers/${id}`);
+  return res.data;
+};
+
+export const getCustomerStats = async () => {
+  const res = await api.get("/api/customers/stats");
+  return res.data;
+};
+
+
+
+
+
+// Get today's sales for logged-in staff
+export const getTodaySales = async () => {
+  const res = await api.get("/api/orders/today");
+  return res.data;
+};
+
+// Get staff sales history (by date)
+export const getStaffSales = async (params = {}) => {
+  const res = await api.get("/api/orders/staff", { params });
+  return res.data;
+};
+// Staff Management
+export const getStaff = async () => {
+  const res = await api.get("/api/staff");
+  return res.data;
+};
+
+export const getStaffById = async (id) => {
+  const res = await api.get(`/api/staff/${id}`);
+  return res.data;
+};
+
+export const createStaff = async (data) => {
+  const res = await api.post("/api/staff", data);
+  return res.data;
+};
+
+export const updateStaff = async (id, data) => {
+  const res = await api.put(`/api/staff/${id}`, data);
+  return res.data;
+};
+
+export const deleteStaff = async (id) => {
+  const res = await api.delete(`/api/staff/${id}`);
+  return res.data;
+};
+export const updateSalaryStatus = async (staffDetailId, data) => {
+  const res = await api.put(`/api/staff/${staffDetailId}/salary-status`, data);
+  return res.data;
+};
+// Get all sales for admin
+export const getAllSales = async (params = {}) => {
+  const res = await api.get("/api/orders/all", { params });
+  return res.data;
+};
+// Admin - Get sales statistics
+export const getSalesStats = async () => {
+  const res = await api.get("/api/orders/stats");
+  return res.data;
+};
+
+// Admin - Get single order
+export const getOrderById = async (id) => {
+  const res = await api.get(`/api/orders/${id}`);
+  return res.data;
+};
+
+export const getCustomerByPhone = async (phone) => {
+  const res = await api.get(`/api/customers/phone/${phone}`);
+  return res.data;
+};
+
+// Positions
+export const getPositions = async () => {
+  const res = await api.get("/api/positions");
+  return res.data;
+};
+
+export const createPosition = async (data) => {
+  const res = await api.post("/api/positions", data);
+  return res.data;
+};
+
+export const updatePosition = async (id, data) => {
+  const res = await api.put(`/api/positions/${id}`, data);
+  return res.data;
+};
+
+export const deletePosition = async (id) => {
+  const res = await api.delete(`/api/positions/${id}`);
+  return res.data;
+};
+
+
+
+
+
+export const getExpenses = async (params = {}) => {
+  const res = await api.get("/api/expenses", {
+    params,
+  });
+  return res.data;
+};
+
+// Create new expense
+export const createExpense = async (data) => {
+  const res = await api.post("/api/expenses", data);
+  return res.data;
+};
+
+// Update expense
+export const updateExpense = async (id, data) => {
+  const res = await api.put(`/api/expenses/${id}`, data);
+  return res.data;
+};
+
+// Delete expense
+export const deleteExpense = async (id) => {
+  const res = await api.delete(`/api/expenses/${id}`);
+  return res.data;
+};
+
+// Get expense statistics (for dashboard cards)
+export const getExpenseStats = async () => {
+  const res = await api.get("/api/expenses/stats");
+  return res.data;
+};
+
+// Profile APIs
+export const getProfile = async () => {
+  const res = await api.get("/api/profile");
+  return res.data;
+};
+
+export const updateProfile = async (data) => {
+  const res = await api.put("/api/profile", data);
+  return res.data;
+};
+
+export const updatePassword = async (data) => {
+  const res = await api.put("/api/profile/password", data);
+  return res.data;
+};
+
+export const uploadAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  const res = await api.post("/api/profile/avatar", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+  return res.data;
+};
+
+export const getStaffProfile = async () => {
+  const res = await api.get("/api/staff/profile");
+  return res.data;
+};

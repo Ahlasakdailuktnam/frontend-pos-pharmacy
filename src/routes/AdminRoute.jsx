@@ -26,22 +26,31 @@ import EditWarehouse from "../pages/Admins/warehouse/EditWarehouse";
 import PurchaseInvoiceManagement from "../pages/Admins/Supplier/PurchaseInvoiceManagement";
 import PurchasePaymentManagement from "../pages/Admins/Supplier/PurchasePaymentManagement";
 import AllPaymentsList from "../pages/Admins/Supplier/AllPaymentsList";
+import AdminSales from "../pages/Admins/AdminSales";
+import PositionManagement from "../pages/Admins/staff/PositionManagement";
+import EditStaff from "../pages/Admins/staff/EditStaff";
+import Profile from "../pages/Admins/Profile";
+import AllReceipts from "../pages/Admins/sales/AllReceipts";
 const AdminRoute = () => {
   return (
     <div className="grid grid-cols-[298px_1fr] h-screen bg-gray-100">
       <SidebarAdmin />
 
       <div className="flex flex-col h-screen overflow-hidden">
-        <Navbar />
 
         <div className="flex-1 overflow-y-auto">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            {/* <Route path="/" element={<Dashboard />} /> */}
+            <Route path="profile" element={<Profile />} />
             <Route path="inventory" element={<ChartProducts />} />
             <Route path="inventory/list" element={<ProductList />} />
             <Route path="inventory/add" element={<AddMedicine />} />
             <Route path="inventory/addType" element={<AddType />} />
-            <Route path="staff" element={<StaffDashboard />} />
+            <Route path="sales" element={<AdminSales />} />
+            <Route path="/staff" element={<StaffDashboard />} />
+            <Route path="/all" element={<AllReceipts />} />
+            <Route path="staff/edit/:id" element={<EditStaff />} />
+            <Route path="staff/position" element={<PositionManagement />} />
             <Route path="staff/add" element={<AddStaff />} />
             <Route path="staff/list" element={<PayRoll />} />
             <Route path="staff/attendance" element={<Attendance />} />

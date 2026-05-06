@@ -49,7 +49,7 @@ const ProductsGrid = ({ products, onAddToCart, getProductPrice, getUnitName, for
               <img
                 src={product.image || "https://placehold.co/300x300/png?text=No+Image"}
                 alt={product.name}
-                className="w-full h-32 object-contain p-2"
+                className="w-full h-32 "
               />
 
               {stockStatus && (

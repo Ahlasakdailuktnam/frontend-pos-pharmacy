@@ -4,6 +4,7 @@ import { HiOutlineDocumentReport } from "react-icons/hi";
 import { IoPeopleOutline, IoLogOutOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
+import { CiSettings } from "react-icons/ci";
 
 import { logoutUser } from "../../services/auth";
 import { useAuth } from "../../context/AuthContext";
@@ -15,13 +16,14 @@ const Sidebar = () => {
   //  Global User
   const { user, setUser } = useAuth();
 
-  const handleLogout = async () => {
+   const handleLogout = async () => {
     try {
       await logoutUser();
-    } catch (error) {
-    } finally {
-      setUser(null);
-      navigate("/");
+
+      localStorage.removeItem("user"); // clear user
+
+      navigate("/"); // go login page
+    } catch (err) {
     }
   };
 
@@ -31,16 +33,16 @@ const Sidebar = () => {
         {/* User Info */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 flex items-center justify-center bg-blue-100 text-[#0D9488] rounded-lg font-semibold">
-            {user?.name?.charAt(0)?.toUpperCase() || "U"}
+            S
           </div>
 
           <div>
             <p className="text-sm font-medium">
-              {user?.name || "Loading..."}
+              Staff
             </p>
 
             <p className="text-xs text-gray-400">
-              {user?.is_admin == 1 ? "Admin" : "Staff"}
+              Chasior
             </p>
           </div>
         </div>
@@ -64,7 +66,7 @@ const Sidebar = () => {
           </Link>
 
           {/* Report */}
-          <Link to="/staff/check">
+          <Link to="/staff/customer">
             <div
               onClick={() => setNavbar("report")}
               className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer ${
@@ -78,30 +80,28 @@ const Sidebar = () => {
             </div>
           </Link>
 
-          {/* Customer */}
-          <Link to="/staff/customer">
-            <div
-              onClick={() => setNavbar("customer")}
-              className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer ${
-                navbar === "customer"
-                  ? "bg-blue-50 text-[#0D9488] border-l-4 border-blue-600"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <IoPeopleOutline className="text-lg" />
-              <p>អតិថិជន</p>
-            </div>
-          </Link>
+
 
         </div>
-
+              <Link to="/staff/profile">
+                          <div
+                            className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer ${
+                              location.pathname === "/staff/profile"
+                                ? "bg-blue-50 text-[#0D9488] border-l-4 border-[#0D9488]"
+                                : "hover:bg-gray-100"
+                            }`}
+                          >
+                            <CiSettings/>
+                            <p>ការកំណត់បន្ថែម</p>
+                          </div>
+                        </Link>
         {/* Logout */}
-        <div className="mt-auto">
+        <div >
           <div
             onClick={handleLogout}
             className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 text-red-500 cursor-pointer"
           >
-            <IoLogOutOutline className="text-lg" />
+            <IoLogOutOutline />
             <p>ចាកចេញ</p>
           </div>
         </div>

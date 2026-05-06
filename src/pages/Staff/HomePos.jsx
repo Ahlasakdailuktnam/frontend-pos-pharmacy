@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FiPlus, FiMinus, FiGrid, FiChevronDown, FiHeart } from "react-icons/fi";
 import { MdDeleteSweep, MdCategory, MdLocalPharmacy, MdFitnessCenter, MdChildCare } from "react-icons/md";
 import { FaCreditCard, FaPills } from "react-icons/fa";
@@ -7,17 +8,35 @@ import ProductsGrid from "../../components/pos/ProductsGrid";
 import { IoIosCash } from "react-icons/io";
 import useTypes from "../../hook/useTypes";
 import { getProducts } from "../../services/auth";
+import { useCart } from "../../context/CartContext";
 
 const HomePos = () => {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("ទំនិញទាំងអស់");
   const [activeCategoryId, setActiveCategoryId] = useState("all");
-  const [check, setCheck] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [message, setMessage] = useState({ type: "", text: "" });
 
   const { categories, subCategories, loading: categoriesLoading, fetchTypes } = useTypes();
+  
+  const { 
+    cart, 
+    addToCart, 
+    updateQuantity, 
+    clearCart, 
+    getCartSubtotal, 
+    getItemCount,
+    message,
+    setMessage,
+    getProductPrice,
+    getUnitName,
+    formatPrice
+  } = useCart();
+
+  const subtotal = getCartSubtotal();
+  const discount = 0;
+  const total = subtotal - discount;
 
   // Get category icon
   const getCategoryIcon = (categoryName) => {
@@ -61,7 +80,7 @@ const HomePos = () => {
           params.category = selectedCategory.name;
         }
       }
-      const res = await getProducts(params);
+      const res = await getProducts(params);  
       const data = res?.data || res || [];
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -70,147 +89,60 @@ const HomePos = () => {
     }
   };
 
-  // Get product price safely
-  const getProductPrice = (product) => {
-    const price = product.price_per_unit || product.cost || 0;
-    return typeof price === "number" ? price : parseFloat(price) || 0;
-  };
-
-  // Get unit name
-  const getUnitName = (product) => {
-    if (product.unit?.name) {
-      return product.unit.name;
-    }
-    return "ដុំ";
-  };
-
-  // Format price safely
-  const formatPrice = (price) => {
-    const numPrice = typeof price === 'number' ? price : parseFloat(price) || 0;
-    return numPrice.toFixed(2);
-  };
-
-  // Show message
-  useEffect(() => {
-    if (message.text) {
-      const timer = setTimeout(() => setMessage({ type: "", text: "" }), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
-
-  // Cart functions
-  const addToCart = (product, quantity = 1, boxQty = null) => {
-    const stock = product.stock_unit || 0;
-    const unitName = getUnitName(product);
-    const isTablet = unitName === "គ្រាប់" || unitName === "tablet" || unitName === "tablets";
-
-    if (stock === 0) {
-      setMessage({ type: "error", text: "អស់ស្តុក!" });
-      return;
-    }
-
-    let itemPrice = getProductPrice(product);
-    if (boxQty) {
-      itemPrice = product.price_per_box || (itemPrice * (product.box_size || 1));
-    }
-
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === product.id);
-
-      if (existingItem) {
-        if (existingItem.quantity + quantity > stock) {
-          setMessage({ type: "error", text: "លើសស្តុក!" });
-          return prevCart;
-        }
-        return prevCart.map((item) =>
-          item.id === product.id
-            ? { 
-                ...item, 
-                quantity: item.quantity + quantity,
-                boxQty: isTablet && boxQty ? (item.boxQty || 0) + boxQty : null
-              }
-            : item
-        );
-      }
-
-      return [
-        ...prevCart,
-        {
-          id: product.id,
-          name: product.name,
-          price: itemPrice,
-          originalPrice: getProductPrice(product),
-          image: product.image,
-          quantity: quantity,
-          stock,
-          unit: unitName,
-          isTablet: isTablet,
-          boxQty: boxQty || null,
-          boxSize: product.box_size || 1,
-          pricePerBox: product.price_per_box,
-        },
-      ];
-    });
-  };
-
-  const removeFromCart = (productId) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
-  };
-
-  const updateQuantity = (productId, quantity) => {
-    setCart((prevCart) =>
-      prevCart
-        .map((item) => {
-          if (item.id !== productId) return item;
-          if (quantity > item.stock) {
-            setMessage({ type: "error", text: "លើសស្តុក!" });
-            return item;
-          }
-          if (quantity <= 0) return null;
-          return { ...item, quantity };
-        })
-        .filter(Boolean)
-    );
-  };
-
-  const clearCart = () => {
-    if (window.confirm("តើអ្នកចង់លុបទំនិញទាំងអស់ក្នុងកន្ត្រកមែនទេ?")) {
-      setCart([]);
-    }
-  };
-
-  const getCartSubtotal = () => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  };
-
-  const getItemCount = () => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  };
-
-  const subtotal = getCartSubtotal();
-  const total = subtotal;
-
   const handleCheckout = () => {
     if (cart.length === 0) {
       setMessage({ type: "error", text: "សូមបញ្ចូលទំនិញក្នុងកន្ត្រកមុន!" });
       return;
     }
 
-    if (!check) {
+    if (!paymentMethod) {
       setMessage({ type: "error", text: "សូមជ្រើសរើសវិធីបង់ប្រាក់!" });
       return;
     }
 
-    const orderSummary = cart
-      .map(
-        (item) =>
-          `${item.name} x ${item.quantity} = $${formatPrice(item.price * item.quantity)}`
-      )
-      .join("\n");
+    // Prepare cart items to pass to checkout
+    const cartItems = cart.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      total: item.price * item.quantity,
+      unit: item.unit,
+      isTablet: item.isTablet,
+      boxQty: item.boxQty,
+      boxSize: item.boxSize,
+      image: item.image
+    }));
 
-    alert(
-      `លំដាប់ការលក់:\n${orderSummary}\n\nសរុប: $${formatPrice(total)}\nវិធីបង់ប្រាក់: ${check.toUpperCase()}`
-    );
+    // Navigate to appropriate checkout page based on payment method
+    if (paymentMethod === "cash") {
+      navigate("/staff/checkPay", { 
+        state: { 
+          total, 
+          subtotal, 
+          cart: cartItems,
+          paymentMethod: "cash"
+        } 
+      });
+    } else if (paymentMethod === "card") {
+      navigate("/staff/checkout-card", { 
+        state: { 
+          total, 
+          subtotal, 
+          cart: cartItems,
+          paymentMethod: "card"
+        } 
+      });
+    } else if (paymentMethod === "qr") {
+      navigate("/staff/checkout-qr", { 
+        state: { 
+          total, 
+          subtotal, 
+          cart: cartItems,
+          paymentMethod: "qr"
+        } 
+      });
+    }
   };
 
   const handleSelectCategory = (categoryId, categoryName) => {
@@ -255,7 +187,7 @@ const HomePos = () => {
         {/* LEFT SIDE */}
         <div className="flex flex-col gap-4">
           {/* CATEGORY ROW WITH DROPDOWN */}
-          <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
+          <div className="p-3">
             <div className="flex flex-wrap gap-2">
               {categoryList.map((cat) => {
                 const hasSubItems = cat.subItems && cat.subItems.length > 0;
@@ -273,7 +205,7 @@ const HomePos = () => {
                             handleSelectCategory(cat.id, cat.name);
                           }
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
                           isActive
                             ? "bg-[#0D9488] text-white shadow-sm"
                             : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
@@ -444,9 +376,9 @@ const HomePos = () => {
 
             <div className="grid grid-cols-3 gap-3 mt-4">
               <button
-                onClick={() => setCheck("cash")}
+                onClick={() => setPaymentMethod("cash")}
                 className={`${
-                  check === "cash"
+                  paymentMethod === "cash"
                     ? "bg-[#0D9488] text-white border flex flex-col items-center rounded-lg py-3 text-sm"
                     : "bg-white border border-gray-300 flex flex-col items-center rounded-lg py-3 text-sm"
                 }`}
@@ -455,9 +387,9 @@ const HomePos = () => {
                 <p className="text-[10px] font-bold">CASH</p>
               </button>
               <button
-                onClick={() => setCheck("card")}
+                onClick={() => setPaymentMethod("card")}
                 className={`${
-                  check === "card"
+                  paymentMethod === "card"
                     ? "bg-[#0D9488] text-white border flex flex-col items-center rounded-lg py-3 text-sm"
                     : "bg-white border border-gray-300 flex flex-col items-center rounded-lg py-3 text-sm"
                 }`}
@@ -466,9 +398,9 @@ const HomePos = () => {
                 <p className="text-[10px] font-bold">CARD</p>
               </button>
               <button
-                onClick={() => setCheck("qr")}
+                onClick={() => setPaymentMethod("qr")}
                 className={`${
-                  check === "qr"
+                  paymentMethod === "qr"
                     ? "bg-[#0D9488] text-white border flex flex-col items-center rounded-lg py-3 text-sm"
                     : "bg-white border border-gray-300 flex flex-col items-center rounded-lg py-3 text-sm"
                 }`}

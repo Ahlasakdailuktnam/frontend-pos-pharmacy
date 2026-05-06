@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LineChart,
   XAxis,
@@ -11,6 +11,9 @@ import {
   ComposedChart,
   Bar,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import {
   Calendar,
@@ -20,8 +23,13 @@ import {
   DollarSign,
   CreditCard,
   Pill,
+  Smartphone,
+  Banknote,
+  Landmark,
+  QrCode,
 } from "lucide-react";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
+import { getSalesStats } from "../../services/auth";
 
 const salesData = [
   {
@@ -109,6 +117,13 @@ const salesData = [
     otc: 2290,
   },
 ];
+
+const COLORS = {
+  cash: "#10B981",
+  card: "#3B82F6",
+  qr: "#8B5CF6",
+};
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -130,6 +145,24 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const Dashboard = ({ isAnimationActive = true }) => {
   const [selectedMetric, setSelectedMetric] = useState("revenue");
+  const [paymentStats, setPaymentStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch payment stats from API
+  useEffect(() => {
+    const fetchPaymentStats = async () => {
+      try {
+        const res = await getSalesStats();
+        const data = res?.data?.data || res?.data || res;
+        setPaymentStats(data?.payment_methods || null);
+      } catch (error) {
+        console.error("Error fetching payment stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPaymentStats();
+  }, []);
 
   const metrics = [
     { key: "revenue", label: "ប្រាក់ចំណូលនិងចំណាយ", icon: FaMoneyBillTrendUp },
@@ -139,8 +172,8 @@ const Dashboard = ({ isAnimationActive = true }) => {
 
   const StatCard = ({ title, value, icon: Icon, trend, color }) => (
     <div
-      className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow border-l-5"
-      style={{ borderLeftColor: color }}
+      className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+      style={{ borderLeft: `4px solid ${color}` }}
     >
       <div className="flex items-center justify-between mb-4">
         <div
@@ -169,9 +202,21 @@ const Dashboard = ({ isAnimationActive = true }) => {
     (sum, item) => sum + item.prescriptions,
     0,
   );
-  const totalUnits = salesData.reduce((sum, item) => sum + item.units, 0);
   const avgGrowth = 12.5;
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // Prepare pie chart data
+  const pieChartData = paymentStats
+    ? [
+        { name: "សាច់ប្រាក់", value: paymentStats.cash || 0, color: COLORS.cash, icon: <Banknote size={16} /> },
+        { name: "ប័ណ្ណឥណទាន", value: paymentStats.card || 0, color: COLORS.card, icon: <CreditCard size={16} /> },
+        { name: "ស្កេន QR", value: paymentStats.qr || 0, color: COLORS.qr, icon: <Smartphone size={16} /> },
+      ]
+    : [];
+
+  const totalPaymentValue = paymentStats
+    ? (paymentStats.cash || 0) + (paymentStats.card || 0) + (paymentStats.qr || 0)
+    : 0;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -210,6 +255,76 @@ const Dashboard = ({ isAnimationActive = true }) => {
         />
       </div>
 
+      {/* Payment Methods Distribution - NEW SECTION */}
+      {!loading && paymentStats && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">ការចែកចាយតាមវិធីបង់ប្រាក់</h2>
+              <p className="text-sm text-gray-500 mt-1">សរុបទឹកប្រាក់ដែលបានបង់តាមវិធីនីមួយៗ</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-xs text-gray-400">
+                <Landmark size={14} />
+                <span>ទិន្នន័យពីការលក់ទាំងអស់</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pie Chart */}
+            <div className="flex flex-col items-center justify-center">
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={3}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                </PieChart>
+              </ResponsiveContainer>
+              <p className="text-sm text-gray-500 mt-2">សរុបទឹកប្រាក់: <span className="font-bold text-teal-600">${totalPaymentValue.toLocaleString()}</span></p>
+            </div>
+
+            {/* Legend with values */}
+            <div className="flex flex-col justify-center space-y-4">
+              {pieChartData.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${item.color}20` }}>
+                      {item.icon}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800" style={{ color: item.color }}>
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {((item.value / totalPaymentValue) * 100).toFixed(1)}% នៃការលក់សរុប
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-gray-800">${item.value.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">ទឹកប្រាក់សរុប</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Chart Controls */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
         <div className="flex flex-wrap items-center justify-between mb-6">
@@ -231,20 +346,20 @@ const Dashboard = ({ isAnimationActive = true }) => {
             </div>
           </div>
 
-           <div className="relative">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="appearance-none bg-white border border-gray-200 rounded-xl pl-4 pr-10 py-1.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-teal-500 cursor-pointer"
-              >
-                <option value="all">ប្រចាំថ្ងៃ</option>
-                <option value="OTC">ប្រចាំខែ</option>
-                <option value="Others">ផ្សេងៗ</option>
-              </select>
-              <svg className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
+          <div className="relative">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="appearance-none bg-white border border-gray-200 rounded-xl pl-4 pr-10 py-1.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-teal-500 cursor-pointer"
+            >
+              <option value="all">ប្រចាំថ្ងៃ</option>
+              <option value="OTC">ប្រចាំខែ</option>
+              <option value="Others">ផ្សេងៗ</option>
+            </select>
+            <svg className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
 
         {/* Chart */}
@@ -255,23 +370,11 @@ const Dashboard = ({ isAnimationActive = true }) => {
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
               <defs>
-                <linearGradient
-                  id="revenueGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
+                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#0D9488" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#0D9488" stopOpacity={0} />
                 </linearGradient>
-                <linearGradient
-                  id="expenseGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
+                <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
                 </linearGradient>

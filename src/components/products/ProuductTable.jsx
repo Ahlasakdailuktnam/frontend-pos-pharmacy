@@ -172,7 +172,7 @@ const ProductTable = ({ products = [], onDelete }) => {
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
                         <Link
-                          to={`/edit-product/${product.id}`}
+                          to={`/admin/supplier/add-sup-invoice`}
                           className="p-1 text-gray-400 hover:text-teal-600"
                         >
                           <MdEdit size={18} />

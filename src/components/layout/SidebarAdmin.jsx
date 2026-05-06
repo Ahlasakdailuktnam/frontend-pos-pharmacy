@@ -20,6 +20,9 @@ import {
   TbReportMedical,
   TbFileInvoiceFilled,
 } from "react-icons/tb";
+import { logoutUser } from "../../services/auth";
+import { CiSettings } from "react-icons/ci";
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import Supplier from "../../pages/Admins/Supplier/Supplier";
@@ -32,9 +35,20 @@ const Sidebar = () => {
     staff: false,
     supplier: false,
     warehouse: false,
+    sales:false
   });
   const location = useLocation();
 
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+
+      localStorage.removeItem("user"); // clear user
+
+      navigate("/"); // go login page
+    } catch (err) {
+    }
+  };
   return (
     <div>
       <div className="flex bg-white flex-col h-screen px-5 py-7 border-r border-gray-200 overflow-y-auto no-scrollbar">
@@ -58,7 +72,7 @@ const Sidebar = () => {
         </div>
         <div className="flex flex-col gap-2 text-gray-600">
           {/* DASHBOARD */}
-          <Link to="/admin">
+          {/* <Link to="/admin">
             <div
               className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer ${
                 location.pathname === "/admin"
@@ -69,8 +83,60 @@ const Sidebar = () => {
               <FaChartArea />
               <p className="font-medium">Dashboard</p>
             </div>
-          </Link>
+          </Link> */}
+           <div>
+            {/* MAIN MENU */}
+            <div
+              onClick={() => {
+                setOpenMenu((prev) => ({
+                  ...prev,
+                  warehouse: !prev.warehouse,
+                }));
+                navigate("/admin/sales");
+              }}
+              className={`flex items-center justify-between gap-3 p-2 rounded-lg cursor-pointer ${
+                location.pathname.includes("/admin/sales")
+                  ? "bg-blue-50 text-[#0D9488] border-l-4 border-[#0D9488]"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              {/* LEFT */}
+              <div className="flex items-center gap-3">
+                <FaChartArea className="text-lg" />
+                <p>ការលក់</p>
+              </div>
 
+              {/* RIGHT ICON */}
+              <span>
+                {openMenu.supplier ? (
+                  <MdKeyboardArrowDown />
+                ) : (
+                  <MdKeyboardArrowRight />
+                )}
+              </span>
+            </div>
+
+            {/* DROPDOWN */}
+            {openMenu.warehouse && (
+              <div className="ml-8 mt-1 flex flex-col gap-1">
+                {/* All Products */}
+
+                {/* Add Product */}
+                <Link to="/admin/all">
+                  <div
+                    className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
+                      location.pathname === "/admin/all"
+                        ? "bg-blue-100 text-[#0D9488]"
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <MdAddChart />
+                    វិក្កយបត្រទាំងអស់
+                  </div>
+                </Link>
+              </div>
+            )}
+          </div>
           {/* INVENTORY DROPDOWN */}
           <div>
             {/* MAIN MENU */}
@@ -164,6 +230,7 @@ const Sidebar = () => {
               <p>អតិថិជន</p>
             </div>
           </Link>
+          
 
           <div>
             {/* MAIN MENU */}
@@ -201,16 +268,16 @@ const Sidebar = () => {
             {openMenu.staff && (
               <div className="ml-8 mt-1 flex flex-col gap-1">
                 {/* All Products */}
-                <Link to="/admin/staff/list">
+                <Link to="/admin/staff/position">
                   <div
                     className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
-                      location.pathname === "/admin/staff/list"
+                      location.pathname === "/admin/staff/position"
                         ? "bg-blue-100 text-[#0D9488]"
                         : "hover:bg-gray-100"
                     }`}
                   >
                     <LiaClipboardListSolid />
-                    បញ្ជីប្រាក់ខែ
+                    បន្ថែមមុខដំណែងថ្មី
                   </div>
                 </Link>
 
@@ -227,7 +294,7 @@ const Sidebar = () => {
                     បន្ថែមបុគ្កលិកថ្មី
                   </div>
                 </Link>
-                <Link to="/admin/staff/att">
+                {/* <Link to="/admin/staff/att">
                   <div
                     className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
                       location.pathname === "/admin/staff/att"
@@ -238,7 +305,7 @@ const Sidebar = () => {
                     <FaUserCheck />
                     កត់វត្តមាន
                   </div>
-                </Link>
+                </Link> */}
               </div>
             )}
           </div>
@@ -331,71 +398,19 @@ const Sidebar = () => {
             )}
           </div>
 
-          <div>
-            {/* MAIN MENU */}
-            <div
-              onClick={() => {
-                setOpenMenu((prev) => ({
-                  ...prev,
-                  warehouse: !prev.warehouse,
-                }));
-                navigate("/admin/warehouse");
-              }}
-              className={`flex items-center justify-between gap-3 p-2 rounded-lg cursor-pointer ${
-                location.pathname.includes("/admin/warehouse")
-                  ? "bg-blue-50 text-[#0D9488] border-l-4 border-[#0D9488]"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              {/* LEFT */}
-              <div className="flex items-center gap-3">
-                <FaWarehouse className="text-lg" />
-                <p>ទីតាំងស្តុកទំនិញ</p>
-              </div>
-
-              {/* RIGHT ICON */}
-              <span>
-                {openMenu.supplier ? (
-                  <MdKeyboardArrowDown />
-                ) : (
-                  <MdKeyboardArrowRight />
-                )}
-              </span>
-            </div>
-
-            {/* DROPDOWN */}
-            {openMenu.warehouse && (
-              <div className="ml-8 mt-1 flex flex-col gap-1">
-                {/* All Products */}
-
-                {/* Add Product */}
-                <Link to="/admin/warehouse/add">
-                  <div
-                    className={`p-2 rounded-lg flex gap-2 items-center cursor-pointer ${
-                      location.pathname === "/admin/warehouse/add"
-                        ? "bg-blue-100 text-[#0D9488]"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    <BsHouseAddFill />
-                    បន្ថែមទីតាំងថ្មី
-                  </div>
-                </Link>
-              </div>
-            )}
-          </div>
+          
 
           {/* REPORT */}
-          <Link to="/admin/expence">
+          <Link to="/admin/profile">
             <div
               className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer ${
-                location.pathname === "/admin/expence"
+                location.pathname === "/admin/profile"
                   ? "bg-blue-50 text-[#0D9488] border-l-4 border-[#0D9488]"
                   : "hover:bg-gray-100"
               }`}
             >
-              <TbReportMedical />
-              <p>ការចំណាយផ្សេងៗ</p>
+              <CiSettings/>
+              <p>ការកំណត់បន្ថែម</p>
             </div>
           </Link>
 
@@ -414,7 +429,10 @@ const Sidebar = () => {
         </div>
         {/* LOGOUT */}
         <div className="mt-auto">
-          <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 text-red-500 cursor-pointer">
+          <div
+            onClick={handleLogout}
+            className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 text-red-500 cursor-pointer"
+          >
             <IoLogOutOutline />
             <p>ចាកចេញ</p>
           </div>
